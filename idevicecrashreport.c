@@ -501,7 +501,7 @@ int test11() {
 
     extract_raw_crash_reports = 1;
     keep_crash_reports = 1;
-    target_directory = "/Users/wujichao/Downloads/firefox/crash-get/crash4";
+    target_directory = "C:\\Users\\Jiangfan\\Desktop\\crash";
 
 //    /* ensure a target directory was supplied */
 //    if (!target_directory) {

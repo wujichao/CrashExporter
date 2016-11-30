@@ -30,6 +30,19 @@
 
 #include "utils.h"
 
+#ifdef WIN32
+char *stpcpy(char *s1, const char *s2)
+{
+    if (s1 == NULL || s2 == NULL)
+        return NULL;
+
+    strcpy(s1, s2);
+
+    return s1 + strlen(s2);
+}
+#endif
+
+
 /**
  * Concatenate strings into a newly allocated string
  *
