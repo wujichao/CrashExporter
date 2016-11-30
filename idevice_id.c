@@ -29,7 +29,11 @@
 #include <libimobiledevice/libimobiledevice.h>
 #include <libimobiledevice/lockdown.h>
 
-int get_device_id(char *udid, char *name)
+/*
+ * input:
+ * output: udid, name
+ */
+int get_current_device(char *udid, char *name)
 {
 	idevice_t device = NULL;
 	lockdownd_client_t client = NULL;
@@ -88,4 +92,45 @@ int get_device_id(char *udid, char *name)
     }
 
     return ret;
+}
+
+/*
+ * input: udid
+ * output: name
+ */
+int get_device_name(const char *udid, char *device_name)
+{
+    int res = -1;
+
+    idevice_t device = NULL;
+    if (idevice_new(&device, udid) != IDEVICE_E_SUCCESS) {
+        fprintf(stderr, "ERROR: Could not connect to device\n");
+        return -1;
+    }
+
+    lockdownd_client_t lockdown = NULL;
+    lockdownd_error_t lerr = lockdownd_client_new_with_handshake(device, &lockdown, "idevicename");
+    if (lerr != LOCKDOWN_E_SUCCESS) {
+        idevice_free(device);
+        fprintf(stderr, "ERROR: Could not connect to lockdownd, error code %d\n", lerr);
+        return -1;
+    }
+
+    // getting device name
+    char* name = NULL;
+    lerr = lockdownd_get_device_name(lockdown, &name);
+    if (name) {
+        printf("%s\n", name);
+        strcpy(device_name, name);
+        free(name);
+        res = 0;
+    } else {
+        fprintf(stderr, "ERROR: Could not get device name, lockdown error %d\n", lerr);
+        res = -1;
+    }
+
+    lockdownd_client_free(lockdown);
+    idevice_free(device);
+
+    return res;
 }

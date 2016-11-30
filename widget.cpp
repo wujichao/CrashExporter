@@ -11,7 +11,18 @@
 
 void idevice_event_cb(const idevice_event_t *event, void *user_data)
 {
-    printf("event: %s  udid: %d\n", event->udid, event->event);
+    printf("event: %d  udid: %s\n", event->event, event->udid);
+
+    char device_name[100];
+    int r = get_device_name(event->udid, device_name);
+
+    printf("device_name %s, r %d", device_name, r);
+
+    QString str;
+    str.sprintf("event: %d  device_name: %s udid: %s\n", event->event, device_name, event->udid);
+
+    Widget *widget = static_cast<Widget*>(user_data);
+    widget->updateIndicatorLabel(str);
 }
 
 Widget::Widget(QWidget *parent) :
@@ -27,7 +38,7 @@ Widget::Widget(QWidget *parent) :
 
     InitScoresTable();
 
-    idevice_error_t r = idevice_event_subscribe(idevice_event_cb, NULL);
+    idevice_error_t r = idevice_event_subscribe(idevice_event_cb, this);
     printf("idevice_event_subscribe: %d\n", r);
 }
 
@@ -35,6 +46,11 @@ Widget::~Widget()
 {
     idevice_event_unsubscribe();
     delete ui;
+}
+
+void Widget::updateIndicatorLabel(QString status)
+{
+    ui->indicatorLabel->setText(status);
 }
 
 void Widget::onClickExportAllButton()
@@ -46,11 +62,7 @@ void Widget::onClickExportAllButton()
 
 void Widget::onClickExportSelectButton()
 {
-    char udid[100];
-    char device_name[100];
-    get_device_id(udid, device_name);
 
-    printf("%s %s", udid, device_name);
 
     QMessageBox::information(this, tr("送餐"), tr("叮咚！外卖已送达"));
 }

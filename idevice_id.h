@@ -5,7 +5,8 @@
 extern "C" {
 #endif
 
-int get_device_id(char *udid, char *device_name);
+int get_current_device(char *udid, char *name);
+int get_device_name(const char *udid, char *device_name);
 
 #ifdef __cplusplus
 }
