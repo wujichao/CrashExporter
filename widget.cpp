@@ -44,8 +44,8 @@ void Widget::InitScoresTable()
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     QFont fnt;
-            fnt.setPointSize(12);
-            ui->tableWidget->setFont(fnt);
+    fnt.setPointSize(12);
+    ui->tableWidget->setFont(fnt);
 
     //记录四个列首字符串
     QStringList listHeaders;
