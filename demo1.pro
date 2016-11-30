@@ -26,7 +26,8 @@ win32:LIBS += "C:\Users\Jiangfan\Desktop\demo1\lib\imobiledevice.lib"
 SOURCES += main.cpp\
         widget.cpp \
     idevicecrashreport.c \
-    utils.c
+    utils.c \
+    idevice_id.c
 
 HEADERS  += widget.h \
     utils.h \
