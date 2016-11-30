@@ -21,6 +21,9 @@ public slots:       //槽函数声明标志
 
 private:
     Ui::Widget *ui;
+
+    void InitScoresTable();
+    void SetTableRow(int row, QString title, QString date);
 };
 
 #endif // WIDGET_H
