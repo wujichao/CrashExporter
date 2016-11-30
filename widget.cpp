@@ -4,29 +4,43 @@
 #include <QTableWidgetItem>
 #include <QTableWidgetSelectionRange>
 #include <QHeaderView>
+#include <qDebug>
 #include "idevicecrashreport.h"
 #include "idevice_id.h"
+#include <libimobiledevice/libimobiledevice.h>
+
+void idevice_event_cb(const idevice_event_t *event, void *user_data)
+{
+    printf("event: %s  udid: %d\n", event->udid, event->event);
+}
 
 Widget::Widget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Widget)
 {
+    setbuf(stdout, NULL); //disable stdout buffer
+
     ui->setupUi(this);
 
     connect(ui->exportAllButton, &QPushButton::clicked, this, &Widget::onClickExportAllButton);
     connect(ui->exportSelectButton, &QPushButton::clicked, this, &Widget::onClickExportSelectButton);
 
     InitScoresTable();
+
+    idevice_error_t r = idevice_event_subscribe(idevice_event_cb, NULL);
+    printf("idevice_event_subscribe: %d\n", r);
 }
 
 Widget::~Widget()
 {
+    idevice_event_unsubscribe();
     delete ui;
 }
 
 void Widget::onClickExportAllButton()
 {
-    test11();
+   // test11();
+
     QMessageBox::information(this, tr("送餐"), tr("叮咚！外卖已送达"));
 }
 
