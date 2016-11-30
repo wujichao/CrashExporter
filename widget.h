@@ -19,9 +19,6 @@ public:
 public slots:       //槽函数声明标志
     void FoodIsComing();    //槽函数
 
-private slots:
-    void on_pushButton_2_clicked();
-
 private:
     Ui::Widget *ui;
 };

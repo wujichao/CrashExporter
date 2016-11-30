@@ -13,9 +13,7 @@ Widget::Widget(QWidget *parent) :
     //添加关联代码，必须放在 setupUi 函数之后
     //connect(ui->pushButton, SIGNAL(clicked()), this, SLOT(FoodIsComing()));
     // 新方式
-    connect(ui->pushButton, &QPushButton::clicked, this, &Widget::FoodIsComing);
-
-    connect(ui->lineEdit, SIGNAL(textEdited(QString)), ui->label, SLOT(setText(QString)));
+    connect(ui->exportAllButton, &QPushButton::clicked, this, &Widget::FoodIsComing);
 }
 
 Widget::~Widget()
@@ -23,14 +21,8 @@ Widget::~Widget()
     delete ui;
 }
 
-//槽函数定义代码，与普通成员函数类似
 void Widget::FoodIsComing()
 {
     test11();
-    QMessageBox::information(this, tr("送餐"), tr("叮咚！外卖已送达"));
-}
-
-void Widget::on_pushButton_2_clicked()
-{
     QMessageBox::information(this, tr("送餐"), tr("叮咚！外卖已送达"));
 }
