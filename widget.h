@@ -15,9 +15,9 @@ public:
     explicit Widget(QWidget *parent = 0);
     ~Widget();
 
-//添加这一段代码
-public slots:       //槽函数声明标志
-    void FoodIsComing();    //槽函数
+public slots:
+    void onClickExportAllButton();
+    void onClickExportSelectButton();
 
 private:
     Ui::Widget *ui;

@@ -31,6 +31,7 @@ SOURCES += main.cpp\
 
 HEADERS  += widget.h \
     utils.h \
-    idevicecrashreport.h
+    idevicecrashreport.h \
+    idevice_id.h
 
 FORMS    += widget.ui
