@@ -6,6 +6,7 @@
 #include <QHeaderView>
 #include <qDebug>
 #include "idevicecrashreport.h"
+#include "idevice_id.h"
 
 void idevice_event_cb(const idevice_event_t *event, void *user_data)
 {
@@ -17,9 +18,30 @@ void idevice_event_cb(const idevice_event_t *event, void *user_data)
 
     if (event->event == IDEVICE_DEVICE_ADD) {
 
+        // 这里有坑, wifi的也混进来了
+        // 暂时不支持判断是否是通过wifi连接
+        // https://github.com/libimobiledevice/libimobiledevice/issues/152
+        // 说不定要整个结构重构
+
         if (widget->client) {
             printf("已有设备连接\n");
             return;
+        }
+
+        // for double check
+        //
+        int count = 0;
+        char **dev_list = NULL;
+        if (idevice_get_device_list(&dev_list, &count) < 0) {
+            fprintf(stderr, "ERROR: Unable to retrieve device list!\n");
+            return;
+        }
+        idevice_device_list_free(dev_list);
+
+        printf("count %d\n", count);
+        if (count != 1) {
+            fprintf(stderr, "ERROR: device_list_count(%d) != 1!\n", count);
+            return;//同时连接零个或多个设备
         }
 
         // connect device
@@ -78,6 +100,11 @@ void idevice_event_cb(const idevice_event_t *event, void *user_data)
     }
 }
 
+void get_crash_list( void *object)
+{
+
+}
+
 Widget::Widget(QWidget *parent) :
         QWidget(parent),
         ui(new Ui::Widget)
@@ -108,7 +135,8 @@ void Widget::updateIndicatorLabel(QString status)
 
 void Widget::onClickExportAllButton()
 {
-    // test11();
+//    test11();
+    get_crash_report_list(device, client);
 
     QMessageBox::information(this, tr("送餐"), tr("叮咚！外卖已送达"));
 }
