@@ -11,17 +11,6 @@
 #include <QFile>
 #include <QTimer>
 
-// http://stackoverflow.com/questions/21646467/how-to-execute-a-functor-in-a-given-thread-in-qt-gcd-style
-template <typename F>
-static void postToThread(F && fun, QObject * obj = qApp) {
-  struct Event : public QEvent {
-    F fun;
-    Event(F && fun) : QEvent(QEvent::None), fun(std::move(fun)) {}
-    ~Event() { fun(); }
-  };
-  QCoreApplication::postEvent(obj, new Event(std::move(fun)));
-}
-
 void get_crash_list(void *object, char *name)
 {
     printf("insert row: name %s\n", name);
@@ -69,9 +58,7 @@ void get_crash_list(void *object, char *name)
         item.path = QString(name);
         item.bundle = QString(bundle);
         item.date = QString(date);
-//        postToThread([&]() {
-//            widget->crashItems.push_back(item);
-//        });
+        widget->crashItems.push_back(item);
 
         free(bundle);
         free(date);
@@ -86,9 +73,9 @@ void idevice_event_cb(const idevice_event_t *event, void *user_data)
 
     Widget *widget = static_cast<Widget*>(user_data);
 
-    postToThread([&widget]() {
-        widget->clearContents();
-    });
+//    postToThread([&widget]() {
+//        widget->clearContents();
+//    });
 
     // connect device
     //
@@ -118,7 +105,7 @@ void idevice_event_cb(const idevice_event_t *event, void *user_data)
     //
     printf("device name: %s\n", name);
     QString str;
-    str.sprintf("device_name: %s udid: %s\n", event->event, name, event->udid);
+    str.sprintf("device_name: %s udid: %s\n", name, event->udid);
     widget->updateIndicatorLabel(str);
     free(name);
 
@@ -135,9 +122,7 @@ void idevice_event_cb(const idevice_event_t *event, void *user_data)
     printf("count %d\n", count);
     if (count != 1) {
         fprintf(stderr, "ERROR: device_list_count(%d) != 1!\n", count);
-//        postToThread([&widget]() {
-//              QMessageBox::information(widget, QObject::tr("错误"), QObject::tr("请关掉手机上的wifi, 并且电脑只连接一台手机"));
-//        });
+//	QMessageBox::information(widget, QObject::tr("错误"), QObject::tr("请关掉手机上的wifi, 并且电脑只连接一台手机"));
         return;//同时连接零个或多个设备
     }
 
