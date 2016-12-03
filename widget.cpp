@@ -103,8 +103,49 @@ void idevice_event_cb(const idevice_event_t *event, void *user_data)
 void get_crash_list(void *object, char *name)
 {
     printf("insert row: name %s\n", name);
-    Widget *widget = static_cast<Widget*>(object);
-    widget->insertRow(QString(name), "11");
+    if (!strstr(name, "MGJ") && !strstr(name, "Mogujie")) {
+        printf("skip\n");
+        return;
+    }
+    if (!strstr(name, ".ips")) {
+        printf("skip\n");
+        return;
+    }
+
+    int pos_name_start = -1;
+    int pos_name_end = -1;
+    int pos_date_start = -1;
+    int pos_date_end = -1;
+    for (int i = strlen(name)-1; i >= 0; i--) {
+        char c = name[i];
+        if (c == '.' && i != 0) {
+            pos_date_end = i;
+        }
+        if (c == '-') {
+            pos_name_end = i;
+            pos_date_start = i+1;
+        }
+        if (c == '/' && pos_name_start == -1) {
+            pos_name_start = i+1;
+        }
+    }
+
+    if (pos_name_start && pos_name_end && pos_date_start && pos_date_end) {
+        char *bundle = (char*)malloc(pos_name_end-pos_name_start+1);
+        strncpy(bundle, name+pos_name_start, pos_name_end-pos_name_start);
+        memset(bundle+pos_name_end-pos_name_start, 0, 1);
+        char *date = (char*)malloc(pos_date_end-pos_date_start+1);
+        strncpy(date, name+pos_date_start, pos_date_end-pos_date_start);
+        memset(date+pos_date_end-pos_date_start, 0, 1);
+
+        printf("%s %s\n", bundle, date);
+
+        Widget *widget = static_cast<Widget*>(object);
+        widget->insertRow(QString(bundle), QString(date));
+
+        free(bundle);
+        free(date);
+    }
 }
 
 Widget::Widget(QWidget *parent) :
