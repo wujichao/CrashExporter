@@ -54,8 +54,8 @@ void get_crash_list(void *object, char *name)
                 if (i == 13 || i == 16) {
                     date[i] = ':';
                 } else {
-                   date[i] = name[offset];
-                   offset += 1;
+                    date[i] = name[offset];
+                    offset += 1;
                 }
             }
         } else {
@@ -74,7 +74,6 @@ void get_crash_list(void *object, char *name)
         widget->crashItems.push_back(item);
 
         free(bundle);
-//        free(date);
     }
 }
 
@@ -180,7 +179,7 @@ void Widget::onCellClicked(int row, int column)
     if (result == 0) {
         QFile f(target_filename);
         if (!f.open(QFile::ReadOnly | QFile::Text)) {
-           qDebug() << "open file error" << QString(target_filename);
+            qDebug() << "open file error" << QString(target_filename);
         }
         QTextStream in(&f);
         ui->detailView->setText(in.readAll());
