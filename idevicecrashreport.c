@@ -722,11 +722,27 @@ static int afc_client_get_crash_report_list(afc_client_t afc, const char* device
 }
 
 
-int get_crash_report_list(idevice_t device, lockdownd_client_t lockdownd, void *object, crash_file_name_cb cb)
+int get_crash_report_list(void *object, crash_file_name_cb cb)
 {
+    // connect device
+    //
+    idevice_t device = NULL;
+    if (idevice_new(&device, NULL) != IDEVICE_E_SUCCESS) {
+        fprintf(stderr, "ERROR: Could not connect to device\n");
+        return -1;
+    }
+
+    lockdownd_client_t lockdown = NULL;
+    lockdownd_error_t lerr = lockdownd_client_new_with_handshake(device, &lockdown, "idevicename");
+    if (lerr != LOCKDOWN_E_SUCCESS) {
+        idevice_free(device);
+        fprintf(stderr, "ERROR: Could not connect to lockdownd, error code %d\n", lerr);
+        return -1;
+    }
+
     /* start crash log mover service */
     lockdownd_service_descriptor_t service = NULL;
-    lockdownd_error_t lockdownd_error = lockdownd_start_service(lockdownd, "com.apple.crashreportmover", &service);
+    lockdownd_error_t lockdownd_error = lockdownd_start_service(lockdown, "com.apple.crashreportmover", &service);
     if (lockdownd_error != LOCKDOWN_E_SUCCESS) {
         fprintf(stderr, "ERROR: lockdownd_start_service(com.apple.crashreportmover), err: %d.\n", lockdownd_error);
         return -1;
@@ -768,7 +784,7 @@ int get_crash_report_list(idevice_t device, lockdownd_client_t lockdownd, void *
         return -1;
     }
 
-    lockdownd_error = lockdownd_start_service(lockdownd, "com.apple.crashreportcopymobile", &service);
+    lockdownd_error = lockdownd_start_service(lockdown, "com.apple.crashreportcopymobile", &service);
     if (lockdownd_error != LOCKDOWN_E_SUCCESS) {
         fprintf(stderr, "ERROR: lockdownd_start_service(com.apple.crashreportcopymobile), err: %d.\n", lockdownd_error);
         return -1;
@@ -806,11 +822,27 @@ int get_crash_report_list(idevice_t device, lockdownd_client_t lockdownd, void *
     return 0;
 }
 
-int get_crash_report_detail(idevice_t device, lockdownd_client_t lockdownd, const char *source_filename, const char *target_filename)
+int get_crash_report_detail(const char *source_filename, const char *target_filename)
 {
+    // connect device
+    //
+    idevice_t device = NULL;
+    if (idevice_new(&device, NULL) != IDEVICE_E_SUCCESS) {
+        fprintf(stderr, "ERROR: Could not connect to device\n");
+        return -1;
+    }
+
+    lockdownd_client_t lockdown = NULL;
+    lockdownd_error_t lerr = lockdownd_client_new_with_handshake(device, &lockdown, "idevicename");
+    if (lerr != LOCKDOWN_E_SUCCESS) {
+        idevice_free(device);
+        fprintf(stderr, "ERROR: Could not connect to lockdownd, error code %d\n", lerr);
+        return -1;
+    }
+
     /* start crash log mover service */
     lockdownd_service_descriptor_t service = NULL;
-    lockdownd_error_t lockdownd_error = lockdownd_start_service(lockdownd, "com.apple.crashreportmover", &service);
+    lockdownd_error_t lockdownd_error = lockdownd_start_service(lockdown, "com.apple.crashreportmover", &service);
     if (lockdownd_error != LOCKDOWN_E_SUCCESS) {
         fprintf(stderr, "ERROR: lockdownd_start_service(com.apple.crashreportmover), err: %d.\n", lockdownd_error);
         return -1;
@@ -852,7 +884,7 @@ int get_crash_report_detail(idevice_t device, lockdownd_client_t lockdownd, cons
         return -1;
     }
 
-    lockdownd_error = lockdownd_start_service(lockdownd, "com.apple.crashreportcopymobile", &service);
+    lockdownd_error = lockdownd_start_service(lockdown, "com.apple.crashreportcopymobile", &service);
     if (lockdownd_error != LOCKDOWN_E_SUCCESS) {
         fprintf(stderr, "ERROR: lockdownd_start_service(com.apple.crashreportcopymobile), err: %d.\n", lockdownd_error);
         return -1;

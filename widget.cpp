@@ -10,7 +10,7 @@
 #include <vector>
 #include <QDir>
 #include <QFile>
-
+void get_crash_list(void *object, char *name);
 void idevice_event_cb(const idevice_event_t *event, void *user_data)
 {
     printf("idevice_event_cb: event: %s, udid: %s\n",
@@ -19,88 +19,57 @@ void idevice_event_cb(const idevice_event_t *event, void *user_data)
 
     Widget *widget = static_cast<Widget*>(user_data);
 
-    if (event->event == IDEVICE_DEVICE_ADD) {
-
-        // 这里有坑, wifi的也混进来了
-        // 暂时不支持判断是否是通过wifi连接
-        // https://github.com/libimobiledevice/libimobiledevice/issues/152
-        // 说不定要整个结构重构
-
-        if (widget->client) {
-            printf("已有设备连接\n");
-            return;
-        }
-
-        // for double check
-        //
-        int count = 0;
-        char **dev_list = NULL;
-        if (idevice_get_device_list(&dev_list, &count) < 0) {
-            fprintf(stderr, "ERROR: Unable to retrieve device list!\n");
-            return;
-        }
-        idevice_device_list_free(dev_list);
-
-        printf("count %d\n", count);
-        if (count != 1) {
-            fprintf(stderr, "ERROR: device_list_count(%d) != 1!\n", count);
-            return;//同时连接零个或多个设备
-        }
-
-        // connect device
-        //
-        idevice_t device = NULL;
-        if (idevice_new(&device, event->udid) != IDEVICE_E_SUCCESS) {
-            fprintf(stderr, "ERROR: Could not connect to device\n");
-            return;
-        }
-
-        lockdownd_client_t lockdown = NULL;
-        lockdownd_error_t lerr = lockdownd_client_new_with_handshake(device, &lockdown, "idevicename");
-        if (lerr != LOCKDOWN_E_SUCCESS) {
-            idevice_free(device);
-            fprintf(stderr, "ERROR: Could not connect to lockdownd, error code %d\n", lerr);
-            return;
-        }
-
-        // getting device name
-        char* name = NULL;
-        lockdownd_error_t nerr = lockdownd_get_device_name(lockdown, &name);
-        if (nerr != LOCKDOWN_E_SUCCESS) {
-            fprintf(stderr, "ERROR: Could not get device name, lockdown error %d\n", lerr);
-            return;
-        }
-
-        widget->client = lockdown;
-        widget->device = device;
-
-        // update ui
-        //
-        printf("device name: %s\n", name);
-        QString str;
-        str.sprintf("event: %d  device_name: %s udid: %s\n", event->event, name, event->udid);
-        widget->updateIndicatorLabel(str);
-
-        free(name);
-
-    } else {
-
-        if (!widget->client) {
-            printf("没有设备连接\n");
-            return;
-        }
-
-        // free device
-        //
-        lockdownd_client_free(widget->client);
-        idevice_free(widget->device);
-        widget->client = NULL;
-        widget->device = NULL;
-
-        // update ui
-        //
-        widget->updateIndicatorLabel(QObject::tr("disconnect"));
+    // connect device
+    //
+    idevice_t device = NULL;
+    if (idevice_new(&device, NULL) != IDEVICE_E_SUCCESS) {
+        fprintf(stderr, "ERROR: Could not connect to device\n");
+        return;
     }
+
+    lockdownd_client_t lockdown = NULL;
+    lockdownd_error_t lerr = lockdownd_client_new_with_handshake(device, &lockdown, "idevicename");
+    if (lerr != LOCKDOWN_E_SUCCESS) {
+        idevice_free(device);
+        fprintf(stderr, "ERROR: Could not connect to lockdownd, error code %d\n", lerr);
+        return;
+    }
+
+    // getting device name
+    char* name = NULL;
+    lockdownd_error_t nerr = lockdownd_get_device_name(lockdown, &name);
+    if (nerr != LOCKDOWN_E_SUCCESS) {
+        fprintf(stderr, "ERROR: Could not get device name, lockdown error %d\n", lerr);
+        return;
+    }
+
+    // update ui
+    //
+    printf("device name: %s\n", name);
+    QString str;
+    str.sprintf("event: %d  device_name: %s udid: %s\n", event->event, name, event->udid);
+    widget->updateIndicatorLabel(str);
+
+    free(name);
+
+    // 检查当前有多少个设备连接, 一个设备也可能既通过wifi又通过usb连接
+    // 暂不能判断是否是usb或者是wifi
+    int count = 0;
+    char **dev_list = NULL;
+    if (idevice_get_device_list(&dev_list, &count) < 0) {
+        fprintf(stderr, "ERROR: Unable to retrieve device list!\n");
+        return;
+    }
+    idevice_device_list_free(dev_list);
+
+    printf("count %d\n", count);
+    if (count != 1) {
+        fprintf(stderr, "ERROR: device_list_count(%d) != 1!\n", count);
+//        QMessageBox::information(widget, QObject::tr("错误"), QObject::tr("请关掉手机上的wifi, 并且电脑只连接一台手机"));
+        return;//同时连接零个或多个设备
+    }
+
+    get_crash_report_list(NULL, NULL, widget, get_crash_list);
 }
 
 void get_crash_list(void *object, char *name)
@@ -219,8 +188,8 @@ void Widget::updateIndicatorLabel(QString status)
 
 void Widget::onClickExportAllButton()
 {
-//   test11();
-    get_crash_report_list(device, client, this, get_crash_list);
+
+
 //    QMessageBox::information(this, tr("送餐"), tr("叮咚！外卖已送达"));
 }
 
