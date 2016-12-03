@@ -622,7 +622,7 @@ int test11() {
 
 
 
-static int afc_client_get_crash_report_list(afc_client_t afc, const char* device_directory)
+static int afc_client_get_crash_report_list(afc_client_t afc, const char* device_directory, void *object, crash_file_name_cb cb)
 {
     printf("dir: %s\n", device_directory);
 
@@ -706,6 +706,7 @@ static int afc_client_get_crash_report_list(afc_client_t afc, const char* device
 
         if (S_ISREG(stbuf.st_mode)) {
             printf("crash: %s\n", source_filename);
+            cb(object, source_filename);
             crash_report_count++;
             res = 0;
         }
@@ -719,7 +720,8 @@ static int afc_client_get_crash_report_list(afc_client_t afc, const char* device
     return res;
 }
 
-int get_crash_report_list(idevice_t device, lockdownd_client_t lockdownd)
+
+int get_crash_report_list(idevice_t device, lockdownd_client_t lockdownd, void *object, crash_file_name_cb cb)
 {
     /* start crash log mover service */
     lockdownd_service_descriptor_t service = NULL;
@@ -783,14 +785,14 @@ int get_crash_report_list(idevice_t device, lockdownd_client_t lockdownd)
         service = NULL;
     }
 
-    int a = afc_client_get_crash_report_list(afc, ".");
+    int a = afc_client_get_crash_report_list(afc, ".", object, cb);
     if (a != 0) {
         fprintf(stderr, "ERROR: Failed to get crash reports from device.\n");
         afc_client_free(afc);
         return -1;
     }
 
-    int b = afc_client_get_crash_report_list(afc, "./Retired");
+    int b = afc_client_get_crash_report_list(afc, "./Retired", object, cb);
     if (b != 0) {
         fprintf(stderr, "ERROR: Failed to get crash reports from device.\n");
         afc_client_free(afc);

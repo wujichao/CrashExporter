@@ -21,6 +21,7 @@ public:
     void updateIndicatorLabel(QString status);
     idevice_t device;
     lockdownd_client_t client;
+    void insertRow(QString title, QString date);
 
 public slots:
     void onClickExportAllButton();
@@ -30,7 +31,6 @@ private:
     Ui::Widget *ui;
 
     void InitScoresTable();
-    void SetTableRow(int row, QString title, QString date);
 };
 
 #endif // WIDGET_H
