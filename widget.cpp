@@ -6,28 +6,81 @@
 #include <QHeaderView>
 #include <qDebug>
 #include "idevicecrashreport.h"
-#include "idevice_id.h"
-#include <libimobiledevice/libimobiledevice.h>
 
 void idevice_event_cb(const idevice_event_t *event, void *user_data)
 {
-    printf("event: %d  udid: %s\n", event->event, event->udid);
-
-    char device_name[100];
-    int r = get_device_name(event->udid, device_name);
-
-    printf("device_name %s, r %d", device_name, r);
-
-    QString str;
-    str.sprintf("event: %d  device_name: %s udid: %s\n", event->event, device_name, event->udid);
+    printf("idevice_event_cb: event: %s, udid: %s\n",
+           event->event==IDEVICE_DEVICE_ADD ? "connect" : "disconnect",
+           event->udid);
 
     Widget *widget = static_cast<Widget*>(user_data);
-    widget->updateIndicatorLabel(str);
+
+    if (event->event == IDEVICE_DEVICE_ADD) {
+
+        if (widget->client) {
+            printf("已有设备连接\n");
+            return;
+        }
+
+        // connect device
+        //
+        idevice_t device = NULL;
+        if (idevice_new(&device, event->udid) != IDEVICE_E_SUCCESS) {
+            fprintf(stderr, "ERROR: Could not connect to device\n");
+            return;
+        }
+
+        lockdownd_client_t lockdown = NULL;
+        lockdownd_error_t lerr = lockdownd_client_new_with_handshake(device, &lockdown, "idevicename");
+        if (lerr != LOCKDOWN_E_SUCCESS) {
+            idevice_free(device);
+            fprintf(stderr, "ERROR: Could not connect to lockdownd, error code %d\n", lerr);
+            return;
+        }
+
+        // getting device name
+        char* name = NULL;
+        lockdownd_error_t nerr = lockdownd_get_device_name(lockdown, &name);
+        if (nerr != LOCKDOWN_E_SUCCESS) {
+            fprintf(stderr, "ERROR: Could not get device name, lockdown error %d\n", lerr);
+            return;
+        }
+
+        widget->client = lockdown;
+        widget->device = device;
+
+        // update ui
+        //
+        printf("device name: %s\n", name);
+        QString str;
+        str.sprintf("event: %d  device_name: %s udid: %s\n", event->event, name, event->udid);
+        widget->updateIndicatorLabel(str);
+
+        free(name);
+
+    } else {
+
+        if (!widget->client) {
+            printf("没有设备连接\n");
+            return;
+        }
+
+        // free device
+        //
+        lockdownd_client_free(widget->client);
+        idevice_free(widget->device);
+        widget->client = NULL;
+        widget->device = NULL;
+
+        // update ui
+        //
+        widget->updateIndicatorLabel(QObject::tr("disconnect"));
+    }
 }
 
 Widget::Widget(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::Widget)
+        QWidget(parent),
+        ui(new Ui::Widget)
 {
     setbuf(stdout, NULL); //disable stdout buffer
 
@@ -55,7 +108,7 @@ void Widget::updateIndicatorLabel(QString status)
 
 void Widget::onClickExportAllButton()
 {
-   // test11();
+    // test11();
 
     QMessageBox::information(this, tr("送餐"), tr("叮咚！外卖已送达"));
 }

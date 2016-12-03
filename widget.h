@@ -2,6 +2,8 @@
 #define WIDGET_H
 
 #include <QWidget>
+#include <libimobiledevice/libimobiledevice.h>
+#include <libimobiledevice/lockdown.h>
 
 namespace Ui {
 class Widget;
@@ -14,7 +16,11 @@ class Widget : public QWidget
 public:
     explicit Widget(QWidget *parent = 0);
     ~Widget();
+
+    // should be private :)
     void updateIndicatorLabel(QString status);
+    idevice_t device;
+    lockdownd_client_t client;
 
 public slots:
     void onClickExportAllButton();
