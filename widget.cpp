@@ -8,6 +8,8 @@
 #include "idevicecrashreport.h"
 #include "idevice_id.h"
 #include <vector>
+#include <QDir>
+#include <QFile>
 
 void idevice_event_cb(const idevice_event_t *event, void *user_data)
 {
@@ -171,12 +173,37 @@ Widget::Widget(QWidget *parent) :
 
     idevice_error_t r = idevice_event_subscribe(idevice_event_cb, this);
     printf("idevice_event_subscribe: %d\n", r);
+
+    ui->detailView->append("s");
 }
 
 void Widget::onCellClicked(int row, int column)
 {
     printf("%d %d\n", row, column);
-    qDebug()<< crashItems[row].bundle;
+    qDebug()<< crashItems[row].path;
+    QString path = crashItems[row].path;
+    QString filename = path.split('/').last();
+
+
+    char source_filename[500] = {0};
+    strcpy(source_filename, path.toLatin1().data());
+
+
+
+    QString finalPath = QDir::temp().filePath(filename);
+    char target_filename[500] = {0};
+    strcpy(target_filename, finalPath.toLatin1().data());
+
+    int result = get_crash_report_detail(device, client, source_filename, target_filename);
+    if (result == 0) {
+        QFile f(target_filename);
+        if (!f.open(QFile::ReadOnly | QFile::Text)) {
+           qDebug() << "open file error" << QString(target_filename);
+        }
+        QTextStream in(&f);
+        ui->detailView->setText(in.readAll());
+        qDebug() << f.size() << in.readAll();
+    }
 }
 
 Widget::~Widget()
@@ -192,7 +219,7 @@ void Widget::updateIndicatorLabel(QString status)
 
 void Widget::onClickExportAllButton()
 {
-//    test11();
+//   test11();
     get_crash_report_list(device, client, this, get_crash_list);
 //    QMessageBox::information(this, tr("送餐"), tr("叮咚！外卖已送达"));
 }

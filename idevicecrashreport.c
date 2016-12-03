@@ -501,7 +501,8 @@ int test11() {
 
     extract_raw_crash_reports = 1;
     keep_crash_reports = 1;
-    target_directory = "C:\\Users\\Jiangfan\\Desktop\\crash";
+    //target_directory = "C:\\Users\\Jiangfan\\Desktop\\crash";
+    target_directory = "/Users/wujichao/Downloads/firefox/crash-get/crash4";
 
 //    /* ensure a target directory was supplied */
 //    if (!target_directory) {
@@ -802,5 +803,104 @@ int get_crash_report_list(idevice_t device, lockdownd_client_t lockdownd, void *
     printf("Done.\n");
 
     afc_client_free(afc);
+    return 0;
+}
+
+int get_crash_report_detail(idevice_t device, lockdownd_client_t lockdownd, const char *source_filename, const char *target_filename)
+{
+    /* start crash log mover service */
+    lockdownd_service_descriptor_t service = NULL;
+    lockdownd_error_t lockdownd_error = lockdownd_start_service(lockdownd, "com.apple.crashreportmover", &service);
+    if (lockdownd_error != LOCKDOWN_E_SUCCESS) {
+        fprintf(stderr, "ERROR: lockdownd_start_service(com.apple.crashreportmover), err: %d.\n", lockdownd_error);
+        return -1;
+    }
+
+    /* trigger move operation on device */
+    idevice_connection_t connection = NULL;
+    idevice_error_t device_error = idevice_connect(device, service->port, &connection);
+    if(device_error != IDEVICE_E_SUCCESS) {
+        fprintf(stderr, "ERROR: idevice_connect(device), err: %d.\n", device_error);
+        return -1;
+    }
+
+    /* read "ping" message which indicates the crash logs have been moved to a safe harbor */
+    char *ping = malloc(4);
+    memset(ping, '\0', 4);
+    int attempts = 0;
+    while ((strncmp(ping, "ping", 4) != 0) && (attempts < 10)) {
+        uint32_t bytes = 0;
+        device_error = idevice_connection_receive_timeout(connection, ping, 4, &bytes, 2000);
+        if ((bytes == 0) && (device_error == IDEVICE_E_SUCCESS)) {
+            attempts++;
+            continue;
+        } else if (device_error < 0) {
+            fprintf(stderr, "ERROR: Crash logs could not be moved. Connection interrupted.\n");
+            break;
+        }
+    }
+    idevice_disconnect(connection);
+    free(ping);
+
+    if (service) {
+        lockdownd_service_descriptor_free(service);
+        service = NULL;
+    }
+
+    if (device_error != IDEVICE_E_SUCCESS || attempts > 10) {
+        fprintf(stderr, "ERROR: Failed to receive ping message from crash report mover.\n");
+        return -1;
+    }
+
+    lockdownd_error = lockdownd_start_service(lockdownd, "com.apple.crashreportcopymobile", &service);
+    if (lockdownd_error != LOCKDOWN_E_SUCCESS) {
+        fprintf(stderr, "ERROR: lockdownd_start_service(com.apple.crashreportcopymobile), err: %d.\n", lockdownd_error);
+        return -1;
+    }
+
+    afc_client_t afc = NULL;
+    afc_error_t afc_error = afc_client_new(device, service, &afc);
+    if(afc_error != AFC_E_SUCCESS) {
+        fprintf(stderr, "ERROR: afc_client_new, err: %d.\n", afc_error);
+        return -1;
+    }
+
+    /* copy file to host */
+    uint64_t handle;
+    afc_error = afc_file_open(afc, source_filename, AFC_FOPEN_RDONLY, &handle);
+    if(afc_error != AFC_E_SUCCESS) {
+//        if (afc_error == AFC_E_OBJECT_NOT_FOUND) {
+//            continue;
+//        }
+        fprintf(stderr, "Unable to open device file '%s' (%d). Skipping...\n", source_filename, afc_error);
+        return -1;
+    }
+
+    FILE* output = fopen(target_filename, "wb");
+    if(output == NULL) {
+        fprintf(stderr, "Unable to open local file '%s'. Skipping...\n", target_filename);
+        afc_file_close(afc, handle);
+        return -1;
+    }
+
+//	printf("%s: %s\n", (keep_crash_reports ? "Copy": "Move") , (char*)target_filename + strlen(target_directory));
+
+    uint32_t bytes_read = 0;
+    uint32_t bytes_total = 0;
+    unsigned char data[0x1000];
+
+    afc_error = afc_file_read(afc, handle, (char*)data, 0x1000, &bytes_read);
+    while(afc_error == AFC_E_SUCCESS && bytes_read > 0) {
+        fwrite(data, 1, bytes_read, output);
+        bytes_total += bytes_read;
+        afc_error = afc_file_read(afc, handle, (char*)data, 0x1000, &bytes_read);
+    }
+    afc_file_close(afc, handle);
+    fclose(output);
+
+//    if ((uint32_t)stbuf.st_size != bytes_total) {
+//        fprintf(stderr, "File size mismatch. Skipping...\n");
+//        return -1;
+//    }
     return 0;
 }
