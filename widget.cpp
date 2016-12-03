@@ -7,6 +7,7 @@
 #include <qDebug>
 #include "idevicecrashreport.h"
 #include "idevice_id.h"
+#include <vector>
 
 void idevice_event_cb(const idevice_event_t *event, void *user_data)
 {
@@ -143,6 +144,12 @@ void get_crash_list(void *object, char *name)
         Widget *widget = static_cast<Widget*>(object);
         widget->insertRow(QString(bundle), QString(date));
 
+        CrashItem item;
+        item.path = QString(name);
+        item.bundle = QString(bundle);
+        item.date = QString(date);
+        widget->crashItems.push_back(item);
+
         free(bundle);
         free(date);
     }
@@ -158,11 +165,18 @@ Widget::Widget(QWidget *parent) :
 
     connect(ui->exportAllButton, &QPushButton::clicked, this, &Widget::onClickExportAllButton);
     connect(ui->exportSelectButton, &QPushButton::clicked, this, &Widget::onClickExportSelectButton);
+    connect(ui->tableWidget, &QTableWidget::cellClicked, this, &Widget::onCellClicked);
 
     InitScoresTable();
 
     idevice_error_t r = idevice_event_subscribe(idevice_event_cb, this);
     printf("idevice_event_subscribe: %d\n", r);
+}
+
+void Widget::onCellClicked(int row, int column)
+{
+    printf("%d %d\n", row, column);
+    qDebug()<< crashItems[row].bundle;
 }
 
 Widget::~Widget()
@@ -195,6 +209,7 @@ void Widget::InitScoresTable()
     ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableWidget->setShowGrid(false);
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     QFont fnt;
     fnt.setPointSize(12);

@@ -4,6 +4,13 @@
 #include <QWidget>
 #include <libimobiledevice/libimobiledevice.h>
 #include <libimobiledevice/lockdown.h>
+#include <QModelIndex>
+
+struct CrashItem {
+    QString path;
+    QString bundle;
+    QString date;
+};
 
 namespace Ui {
 class Widget;
@@ -21,14 +28,17 @@ public:
     void updateIndicatorLabel(QString status);
     idevice_t device;
     lockdownd_client_t client;
+    std::vector<CrashItem> crashItems;
     void insertRow(QString title, QString date);
 
 public slots:
     void onClickExportAllButton();
     void onClickExportSelectButton();
+    void onCellClicked(int row, int column);
 
 private:
     Ui::Widget *ui;
+
 
     void InitScoresTable();
 };
