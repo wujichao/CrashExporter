@@ -44,10 +44,23 @@ void get_crash_list(void *object, char *name)
     if (pos_name_start && pos_name_end && pos_date_start && pos_date_end) {
         char *bundle = (char*)malloc(pos_name_end-pos_name_start+1);
         strncpy(bundle, name+pos_name_start, pos_name_end-pos_name_start);
-        memset(bundle+pos_name_end-pos_name_start, 0, 1);
-        char *date = (char*)malloc(pos_date_end-pos_date_start+1);
-        strncpy(date, name+pos_date_start, pos_date_end-pos_date_start);
-        memset(date+pos_date_end-pos_date_start, 0, 1);
+        bundle[pos_name_end-pos_name_start] = 0;
+
+        char date[50] = {0};
+        int offset = pos_date_start;
+        if (pos_date_end-pos_date_start == 17) {
+            int i = 0;
+            for (i = 0; i < pos_date_end-pos_date_start + 2; i++) {
+                if (i == 13 || i == 16) {
+                    date[i] = ':';
+                } else {
+                   date[i] = name[offset];
+                   offset += 1;
+                }
+            }
+        } else {
+            strncpy(date, name+pos_date_start, pos_date_end-pos_date_start);
+        }
 
         printf("%s %s\n", bundle, date);
 
@@ -61,7 +74,7 @@ void get_crash_list(void *object, char *name)
         widget->crashItems.push_back(item);
 
         free(bundle);
-        free(date);
+//        free(date);
     }
 }
 
