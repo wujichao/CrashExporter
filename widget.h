@@ -26,10 +26,9 @@ public:
 
     // should be private :)
     void updateIndicatorLabel(QString status);
-    idevice_t device;
-    lockdownd_client_t client;
     std::vector<CrashItem> crashItems;
     void insertRow(QString title, QString date);
+    void clearContents();
 
 public slots:
     void onClickExportAllButton();
@@ -38,9 +37,7 @@ public slots:
 
 private:
     Ui::Widget *ui;
-
-
-    void InitScoresTable();
+    void setupTableWidget();
 };
 
 #endif // WIDGET_H
