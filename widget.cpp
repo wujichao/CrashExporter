@@ -78,72 +78,6 @@ void get_crash_list(void *object, char *name)
     }
 }
 
-void idevice_event_cb(const idevice_event_t *event, void *user_data)
-{
-    printf("idevice_event_cb: event: %s, udid: %s\n",
-           event->event==IDEVICE_DEVICE_ADD ? "connect" : "disconnect",
-           event->udid);
-
-    Widget *widget = static_cast<Widget*>(user_data);
-
-//    postToThread([&widget]() {
-//        widget->clearContents();
-//    });
-
-    // connect device
-    //
-    idevice_t device = NULL;
-    if (idevice_new(&device, NULL) != IDEVICE_E_SUCCESS) {
-        fprintf(stderr, "ERROR: Could not connect to device\n");
-        return;
-    }
-
-    lockdownd_client_t lockdown = NULL;
-    lockdownd_error_t lerr = lockdownd_client_new_with_handshake(device, &lockdown, "idevicename");
-    if (lerr != LOCKDOWN_E_SUCCESS) {
-        idevice_free(device);
-        fprintf(stderr, "ERROR: Could not connect to lockdownd, error code %d\n", lerr);
-        return;
-    }
-
-    // getting device name
-    char* name = NULL;
-    lockdownd_error_t nerr = lockdownd_get_device_name(lockdown, &name);
-    if (nerr != LOCKDOWN_E_SUCCESS) {
-        fprintf(stderr, "ERROR: Could not get device name, lockdown error %d\n", lerr);
-        return;
-    }
-
-    // update ui
-    //
-    printf("device name: %s\n", name);
-    QString str;
-    str.sprintf("device_name: %s udid: %s\n", name, event->udid);
-    widget->updateIndicatorLabel(str);
-    free(name);
-
-    // 检查当前有多少个设备连接, 一个设备也可能既通过wifi又通过usb连接
-    // 暂不能判断是否是usb或者是wifi
-    int count = 0;
-    char **dev_list = NULL;
-
-
-    if (idevice_get_device_list(&dev_list, &count) < 0) {
-        fprintf(stderr, "ERROR: Unable to retrieve device list!\n");
-        return;
-    }
-    idevice_device_list_free(dev_list);
-
-    printf("count %d\n", count);
-    if (count != 1) {
-        fprintf(stderr, "ERROR: device_list_count(%d) != 1!\n", count);
-//	QMessageBox::information(widget, QObject::tr("错误"), QObject::tr("请关掉手机上的wifi, 并且电脑只连接一台手机"));
-        return;//同时连接零个或多个设备
-    }
-
-    get_crash_report_list(widget, get_crash_list);
-}
-
 Widget::Widget(QWidget *parent) :
         QWidget(parent),
         ui(new Ui::Widget)
@@ -161,9 +95,6 @@ Widget::Widget(QWidget *parent) :
     monitor->start();
 
     setupTableWidget();
-
-    //idevice_error_t r = idevice_event_subscribe(idevice_event_cb, this);
-    //printf("idevice_event_subscribe: %d\n", r);
 
     ui->detailView->append("Crash详情");
 }
@@ -196,7 +127,6 @@ void Widget::onCellClicked(int row, int column)
 
 Widget::~Widget()
 {
-    //idevice_event_unsubscribe();
     delete monitor;
     delete ui;
 }
@@ -211,6 +141,10 @@ void Widget::clearContents()
     ui->tableWidget->clear();
     crashItems.clear();
     ui->detailView->clear();
+
+    QStringList listHeaders;
+    listHeaders<<tr("App")<<tr("Date");
+    ui->tableWidget->setHorizontalHeaderLabels(listHeaders);
 }
 
 void Widget::onClickExportAllButton()
@@ -262,7 +196,63 @@ void Widget::insertRow(QString title, QString date)
 
 void Widget::onDeviceEvent(int type, char *udid)
 {
-    qDebug() << "event";
-    qDebug() << udid;
+    printf("idevice_event_cb: event: %s, udid: %s\n",
+           type==IDEVICE_DEVICE_ADD ? "connect" : "disconnect",
+           udid);
+
+    clearContents();
+
+    // connect device
+    //
+    idevice_t device = NULL;
+    if (idevice_new(&device, NULL) != IDEVICE_E_SUCCESS) {
+        fprintf(stderr, "ERROR: Could not connect to device\n");
+        return;
+    }
+
+    lockdownd_client_t lockdown = NULL;
+    lockdownd_error_t lerr = lockdownd_client_new_with_handshake(device, &lockdown, "idevicename");
+    if (lerr != LOCKDOWN_E_SUCCESS) {
+        idevice_free(device);
+        fprintf(stderr, "ERROR: Could not connect to lockdownd, error code %d\n", lerr);
+        return;
+    }
+
+    // getting device name
+    char* name = NULL;
+    lockdownd_error_t nerr = lockdownd_get_device_name(lockdown, &name);
+    if (nerr != LOCKDOWN_E_SUCCESS) {
+        fprintf(stderr, "ERROR: Could not get device name, lockdown error %d\n", lerr);
+        return;
+    }
+
+    // update ui
+    //
+    printf("device name: %s\n", name);
+    QString str;
+    str.sprintf("device_name: %s udid: %s\n", name, udid);
+    updateIndicatorLabel(str);
+    free(name);
+
+    // 检查当前有多少个设备连接, 一个设备也可能既通过wifi又通过usb连接
+    // 暂不能判断是否是usb或者是wifi
+    int count = 0;
+    char **dev_list = NULL;
+
+    if (idevice_get_device_list(&dev_list, &count) < 0) {
+        fprintf(stderr, "ERROR: Unable to retrieve device list!\n");
+        return;
+    }
+    idevice_device_list_free(dev_list);
+
+    printf("count %d\n", count);
+    if (count != 1) {
+        fprintf(stderr, "ERROR: device_list_count(%d) != 1!\n", count);
+        QMessageBox::information(this, QObject::tr("错误"), QObject::tr("请关掉手机上的wifi, 并且电脑只连接一台手机"));
+        return;//同时连接零个或多个设备
+    }
+
+    get_crash_report_list(this, get_crash_list);
+
     free(udid);
 }
