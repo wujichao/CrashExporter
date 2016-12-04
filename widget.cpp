@@ -101,28 +101,28 @@ Widget::Widget(QWidget *parent) :
 
 void Widget::onCellClicked(int row, int column)
 {
-    printf("%d %d\n", row, column);
-    qDebug()<< crashItems[row].path;
-    QString path = crashItems[row].path;
-    QString filename = path.split('/').last();
+//    printf("%d %d\n", row, column);
+//    qDebug()<< crashItems[row].path;
+//    QString path = crashItems[row].path;
+//    QString filename = path.split('/').last();
 
-    char source_filename[500] = {0};
-    strcpy(source_filename, path.toLatin1().data());
+//    char source_filename[500] = {0};
+//    strcpy(source_filename, path.toLatin1().data());
 
-    QString finalPath = QDir::temp().filePath(filename);
-    char target_filename[500] = {0};
-    strcpy(target_filename, finalPath.toLatin1().data());
+//    QString finalPath = QDir::temp().filePath(filename);
+//    char target_filename[500] = {0};
+//    strcpy(target_filename, finalPath.toLatin1().data());
 
-    int result = get_crash_report_detail(source_filename, target_filename);
-    if (result == 0) {
-        QFile f(target_filename);
-        if (!f.open(QFile::ReadOnly | QFile::Text)) {
-            qDebug() << "open file error" << QString(target_filename);
-        }
-        QTextStream in(&f);
-        ui->detailView->setText(in.readAll());
-        qDebug() << f.size();
-    }
+//    int result = get_crash_report_detail(source_filename, target_filename);
+//    if (result == 0) {
+//        QFile f(target_filename);
+//        if (!f.open(QFile::ReadOnly | QFile::Text)) {
+//            qDebug() << "open file error" << QString(target_filename);
+//        }
+//        QTextStream in(&f);
+//        ui->detailView->setText(in.readAll());
+//        qDebug() << f.size();
+//    }
 }
 
 Widget::~Widget()
@@ -252,7 +252,9 @@ void Widget::onDeviceEvent(int type, char *udid)
         return;//同时连接零个或多个设备
     }
 
-    get_crash_report_list(this, get_crash_list);
+    // TODO export task
+    char *keywords[] = {"MGJ", "Mogujie"};
+    copy_crash_reports("/Users/wujichao/Downloads/firefox/crash-get/crash5", keywords, 2);
 
-    free(udid);
+    if (udid) free(udid);
 }
