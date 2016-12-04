@@ -14,7 +14,7 @@ TEMPLATE = app
 unix:INCLUDEPATH += "/usr/local/include"
 unix:LIBS += "/usr/local/Cellar/libplist/1.12/lib/libplist.dylib"
 unix:LIBS += "/usr/local/Cellar/libplist/1.12/lib/libplist++.dylib"
-unix:LIBS += "/usr/local/Cellar/libimobiledevice/HEAD-23069d1/lib/libimobiledevice.dylib"
+unix:LIBS += "/usr/local/Cellar/libimobiledevice/HEAD-9df4e69/lib/libimobiledevice.dylib"
 unix:LIBS += "/usr/local/Cellar/openssl/1.0.2j/lib/libssl.dylib"
 unix:LIBS += "/usr/local/Cellar/openssl/1.0.2j/lib/libcrypto.dylib"
 
@@ -27,11 +27,13 @@ SOURCES += main.cpp\
         widget.cpp \
     idevicecrashreport.c \
     utils.c \
-    idevice_id.c
+    idevice_id.c \
+    devicemonitor.cpp
 
 HEADERS  += widget.h \
     utils.h \
     idevicecrashreport.h \
-    idevice_id.h
+    idevice_id.h \
+    devicemonitor.h
 
 FORMS    += widget.ui

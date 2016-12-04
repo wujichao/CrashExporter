@@ -5,6 +5,7 @@
 #include <libimobiledevice/libimobiledevice.h>
 #include <libimobiledevice/lockdown.h>
 #include <QModelIndex>
+#include <devicemonitor.h>
 
 struct CrashItem {
     QString path;
@@ -34,9 +35,11 @@ public slots:
     void onClickExportAllButton();
     void onClickExportSelectButton();
     void onCellClicked(int row, int column);
+    void onDeviceEvent(int type, char *udid);
 
 private:
     Ui::Widget *ui;
+    DeviceMonitor *monitor;
     void setupTableWidget();
 };
 

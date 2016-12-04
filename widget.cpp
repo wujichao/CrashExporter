@@ -10,6 +10,7 @@
 #include <QDir>
 #include <QFile>
 #include <QTimer>
+#include <devicemonitor.h>
 
 void get_crash_list(void *object, char *name)
 {
@@ -125,6 +126,8 @@ void idevice_event_cb(const idevice_event_t *event, void *user_data)
     // 暂不能判断是否是usb或者是wifi
     int count = 0;
     char **dev_list = NULL;
+
+
     if (idevice_get_device_list(&dev_list, &count) < 0) {
         fprintf(stderr, "ERROR: Unable to retrieve device list!\n");
         return;
@@ -153,10 +156,14 @@ Widget::Widget(QWidget *parent) :
     connect(ui->exportSelectButton, &QPushButton::clicked, this, &Widget::onClickExportSelectButton);
     connect(ui->tableWidget, &QTableWidget::cellClicked, this, &Widget::onCellClicked);
 
+    monitor = new DeviceMonitor();
+    connect(monitor, &DeviceMonitor::idevice_event, this, &Widget::onDeviceEvent);
+    monitor->start();
+
     setupTableWidget();
 
-    idevice_error_t r = idevice_event_subscribe(idevice_event_cb, this);
-    printf("idevice_event_subscribe: %d\n", r);
+    //idevice_error_t r = idevice_event_subscribe(idevice_event_cb, this);
+    //printf("idevice_event_subscribe: %d\n", r);
 
     ui->detailView->append("Crash详情");
 }
@@ -189,7 +196,8 @@ void Widget::onCellClicked(int row, int column)
 
 Widget::~Widget()
 {
-    idevice_event_unsubscribe();
+    //idevice_event_unsubscribe();
+    delete monitor;
     delete ui;
 }
 
@@ -250,4 +258,11 @@ void Widget::insertRow(QString title, QString date)
     ui->tableWidget->setItem(row, 1, item2);
 
     ui->tableWidget->setRowHeight(row, 22);
+}
+
+void Widget::onDeviceEvent(int type, char *udid)
+{
+    qDebug() << "event";
+    qDebug() << udid;
+    free(udid);
 }
