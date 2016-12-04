@@ -253,7 +253,7 @@ void Widget::onDeviceEvent(int type, char *udid)
     }
 
     // TODO export task
-    char *keywords[] = {"MGJ", "Mogujie"};
+    const char *keywords[] = {"MGJ", "Mogujie"};
     copy_crash_reports("/Users/wujichao/Downloads/firefox/crash-get/crash5", keywords, 2);
 
     if (udid) free(udid);

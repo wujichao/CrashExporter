@@ -11,7 +11,7 @@ typedef void(*crash_file_name_cb)(void *object, char *name);
 extern "C" {
 #endif
 
-int copy_crash_reports(char *target_directory, char **keyworks, int keywords_len);
+int copy_crash_reports(char *target_directory, const char **keyworks, int keywords_len);
 
 #ifdef __cplusplus
 }

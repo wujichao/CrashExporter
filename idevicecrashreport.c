@@ -47,7 +47,7 @@ const char* target_directory = NULL;
 static int extract_raw_crash_reports = 0;
 static int keep_crash_reports = 0;
 
-char **keywords;
+const char **keywords;
 int keywords_len = 0;
 
 static int file_exists(const char* path)
@@ -318,7 +318,7 @@ static int afc_client_copy_and_remove_crash_reports(afc_client_t afc, const char
 }
 
 
-int copy_crash_reports(char *target_directory, char **k, int k_len)
+int copy_crash_reports(char *target_directory, const char **k, int k_len)
 {
     keywords = k;
     keywords_len = k_len;
@@ -331,7 +331,6 @@ int copy_crash_reports(char *target_directory, char **k, int k_len)
     lockdownd_error_t lockdownd_error = LOCKDOWN_E_SUCCESS;
     afc_error_t afc_error = AFC_E_SUCCESS;
 
-    int i;
     const char* udid = NULL;
 
     extract_raw_crash_reports = 1;
