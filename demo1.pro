@@ -28,12 +28,14 @@ SOURCES += main.cpp\
     idevicecrashreport.c \
     utils.c \
     idevice_id.c \
-    devicemonitor.cpp
+    devicemonitor.cpp \
+    exporttask.cpp
 
 HEADERS  += widget.h \
     utils.h \
     idevicecrashreport.h \
     idevice_id.h \
-    devicemonitor.h
+    devicemonitor.h \
+    exporttask.h
 
 FORMS    += widget.ui
