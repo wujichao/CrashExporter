@@ -28,7 +28,7 @@ void ExportTask::run()
     QDir tempDir = QDir::temp();
     bool success = tempDir.mkpath(udid);
     if (!success) {
-        emit exportFinish(NULL, "create dir error");
+        emit exportFinish(NULL, "create dir error", udid);
         return;
     }
     QString dir = tempDir.filePath(udid);
@@ -43,12 +43,17 @@ void ExportTask::run()
     }
 
     // TODO: get error message
+    int r =
     copy_crash_reports(path, c_keywords, s, ExportTask_export_progress_callback, this);
 
     // TODO:
     // c_keywords leaks
 
-    emit exportFinish(dir, NULL);
+    if (r == 0) {
+        emit exportFinish(dir, NULL, udid);
+    } else {
+        emit exportFinish(NULL, "TODO: 传出错误", udid);
+    }
 
     if (path) {
         free(path);

@@ -249,18 +249,15 @@ void Widget::startExportTask(QString udid, QStringList keywords)
     }
     taskSet.insert(udid);
 
-    // TODO:
-    if (udid == "ad8b22b0bfb77f66ea488e0cd55b5bcbec70c850") {
-        qDebug() << "export udid:" << udid;
-        console_log("export udid:" + udid + "\n");
+    qDebug() << "export udid:" << udid;
+    console_log("export udid:" + udid + "\n");
 
-        ExportTask *task = new ExportTask(udid, keywords, this);
+    ExportTask *task = new ExportTask(udid, keywords, this);
 
-        connect(task, &ExportTask::exportFinish, this, &Widget::onExportFinish);
-        connect(task, &ExportTask::exportProgress, this, &Widget::onExportProgress);
-        connect(task, &ExportTask::finished, task, &QObject::deleteLater);
-        task->start();
-    }
+    connect(task, &ExportTask::exportFinish, this, &Widget::onExportFinish);
+    connect(task, &ExportTask::exportProgress, this, &Widget::onExportProgress);
+    connect(task, &ExportTask::finished, task, &QObject::deleteLater);
+    task->start();
 }
 
 void Widget::restartExportTask(QString udid, QStringList keywords)
@@ -272,10 +269,18 @@ void Widget::restartExportTask(QString udid, QStringList keywords)
     startExportTask(udid, keywords);
 }
 
-void Widget::onExportFinish(QString result, QString error)
+void Widget::onExportFinish(QString result, QString error, QString udid)
 {
     qDebug() << "exportFinish "<< result << error;
     console_log("exportFinish result: " + result + ", error: " + error + "\n");
+
+    if (error != NULL) {
+        std::set<QString>::iterator it = taskSet.find(udid);
+        if(it != taskSet.end()) {
+            taskSet.erase(it);
+        }
+        return;
+    }
 
     QDir dir(result);
     QFileInfoList files = dir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllEntries);

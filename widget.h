@@ -32,7 +32,7 @@ public slots:
     void onClickExportSelectButton();
     void onCellClicked(int row, int column);
     void onDeviceEvent(int type, char *udid);
-    void onExportFinish(QString result, QString error);
+    void onExportFinish(QString result, QString error, QString udid);
     void onExportProgress(QString message);
 
 private:

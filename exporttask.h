@@ -14,7 +14,7 @@ public:
     void export_progress_proxy(char *message);
 
 signals:
-    void exportFinish(QString result, QString error);
+    void exportFinish(QString result, QString error, QString udid);
     void exportProgress(QString message);
 
 protected:
