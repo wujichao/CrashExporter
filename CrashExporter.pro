@@ -12,6 +12,7 @@ TARGET = CrashExportor
 TEMPLATE = app
 
 ICON = MyIcon.icns
+RC_ICONS = MyIcon.ico
 
 unix:INCLUDEPATH += "/usr/local/include"
 unix:LIBS += "/usr/local/Cellar/libplist/1.12/lib/libplist.dylib"
