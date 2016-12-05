@@ -8,8 +8,10 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = demo1
+TARGET = CrashExportor
 TEMPLATE = app
+
+ICON = MyIcon.icns
 
 unix:INCLUDEPATH += "/usr/local/include"
 unix:LIBS += "/usr/local/Cellar/libplist/1.12/lib/libplist.dylib"
