@@ -159,6 +159,12 @@ void Widget::onDeviceEvent(int type, char *udid)
            type==IDEVICE_DEVICE_ADD ? "connect" : "disconnect",
            udid);
 
+    QString message;
+    message.sprintf("idevice_event_cb: event: %s, udid: %s\n",
+           type==IDEVICE_DEVICE_ADD ? "connect" : "disconnect",
+           udid);
+    console_log(message);
+
     // connect device
     //
     idevice_t device = NULL;
@@ -189,6 +195,7 @@ void Widget::onDeviceEvent(int type, char *udid)
     QString str;
     str.sprintf("device_name: %s udid: %s\n", name, udid);
     updateIndicatorLabel(str);
+    console_log(str);
     free(name);
 
     // 检查当前有多少个设备连接, 一个设备也可能既通过wifi又通过usb连接
@@ -202,9 +209,13 @@ void Widget::onDeviceEvent(int type, char *udid)
     }
 
     printf("count %d\n", count);
+    console_log("设备列表: \n");
     for (int i = 0; i < count; i++) {
         char *id = dev_list[i];
         printf("udid: %s\n", id);
+
+        QString log; log.sprintf("udid: %s\n", id);
+        console_log(log);
 
         QString qudid; qudid.sprintf("%s", id);
         QStringList keywords;
@@ -228,9 +239,12 @@ void Widget::onDeviceEvent(int type, char *udid)
 void Widget::startExportTask(QString udid, QStringList keywords)
 {
     qDebug() << "startExportTask " << udid;
+    console_log("startExportTask " + udid + "\n");
+
     bool is_in = taskSet.find(udid) != taskSet.end();
     if(is_in) {
         qDebug() << "is_in: " << udid;
+        console_log("is_in: " + udid + "\n");
         return;
     }
     taskSet.insert(udid);
@@ -238,6 +252,7 @@ void Widget::startExportTask(QString udid, QStringList keywords)
     // TODO:
     if (udid == "ad8b22b0bfb77f66ea488e0cd55b5bcbec70c850") {
         qDebug() << "export udid:" << udid;
+        console_log("export udid:" + udid + "\n");
 
         ExportTask *task = new ExportTask(udid, keywords, this);
 
@@ -260,6 +275,7 @@ void Widget::restartExportTask(QString udid, QStringList keywords)
 void Widget::onExportFinish(QString result, QString error)
 {
     qDebug() << "exportFinish "<< result << error;
+    console_log("exportFinish result: " + result + ", error: " + error + "\n");
 
     QDir dir(result);
     QFileInfoList files = dir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllEntries);
@@ -269,6 +285,7 @@ void Widget::onExportFinish(QString result, QString error)
         }else{
             qDebug() << "FILE: " << file.fileName();
         }
+        console_log(file.fileName() + "\n");
     }
 
     crashFiles = files;
@@ -277,6 +294,11 @@ void Widget::onExportFinish(QString result, QString error)
 }
 
 void Widget::onExportProgress(QString message)
+{
+   console_log(message);
+}
+
+void Widget::console_log(QString message)
 {
     ui->consoleView->insertPlainText(message);
 

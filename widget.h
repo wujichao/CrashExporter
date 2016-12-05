@@ -43,6 +43,7 @@ private:
     void updateTableWidgets();
     void clearContents();
     void insertRow(QString title, QString date);
+    void console_log(QString message);
 
     // monitor
     DeviceMonitor *monitor;
