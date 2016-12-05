@@ -5,7 +5,6 @@
 #include <QTableWidgetSelectionRange>
 #include <QHeaderView>
 #include <qDebug>
-#include "idevicecrashreport.h"
 #include <vector>
 #include <QDir>
 #include <QFile>
@@ -34,19 +33,6 @@ Widget::Widget(QWidget *parent) :
     ui->detailView->append("Crash详情");
 }
 
-void Widget::onCellClicked(int row, int column)
-{
-    printf("onCellClicked row: %d, column %d\n", row, column);
-
-    QFileInfo fileInfo = crashFiles[row];
-    QFile f(fileInfo.filePath());
-    if (!f.open(QFile::ReadOnly | QFile::Text)) {
-        qDebug() << "open file error" << QString(fileInfo.filePath());
-    }
-    QTextStream in(&f);
-    ui->detailView->setText(in.readAll());
-}
-
 Widget::~Widget()
 {
     delete monitor;
@@ -61,7 +47,6 @@ void Widget::updateIndicatorLabel(QString status)
 void Widget::clearContents()
 {
     ui->tableWidget->clear();
-    crashItems.clear();
     ui->detailView->clear();
 
     QStringList listHeaders;
@@ -114,6 +99,19 @@ void Widget::insertRow(QString title, QString date)
     ui->tableWidget->setItem(row, 1, item2);
 
     ui->tableWidget->setRowHeight(row, 22);
+}
+
+void Widget::onCellClicked(int row, int column)
+{
+    printf("onCellClicked row: %d, column %d\n", row, column);
+
+    QFileInfo fileInfo = crashFiles[row];
+    QFile f(fileInfo.filePath());
+    if (!f.open(QFile::ReadOnly | QFile::Text)) {
+        qDebug() << "open file error" << QString(fileInfo.filePath());
+    }
+    QTextStream in(&f);
+    ui->detailView->setText(in.readAll());
 }
 
 void Widget::onDeviceEvent(int type, char *udid)
@@ -234,13 +232,12 @@ void Widget::onExportFinish(QString result, QString error)
     }
 
     crashFiles = files;
+    clearContents();
     updateTableWidgets();
 }
 
 void Widget::updateTableWidgets()
 {
-    clearContents();
-
     foreach (QFileInfo file, crashFiles){
         if (file.isDir()) {
             qDebug() << "DIR: " << file.fileName();

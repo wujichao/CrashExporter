@@ -27,12 +27,6 @@ public:
     explicit Widget(QWidget *parent = 0);
     ~Widget();
 
-    // should be private :)
-    void updateIndicatorLabel(QString status);
-    std::vector<CrashItem> crashItems;
-    void insertRow(QString title, QString date);
-    void clearContents();
-
 public slots:
     void onClickExportAllButton();
     void onClickExportSelectButton();
@@ -42,8 +36,12 @@ public slots:
 
 private:
     Ui::Widget *ui;
+
+    void updateIndicatorLabel(QString status);
     void setupTableWidget();
     void updateTableWidgets();
+    void clearContents();
+    void insertRow(QString title, QString date);
 
     // monitor
     DeviceMonitor *monitor;
