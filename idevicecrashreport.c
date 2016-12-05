@@ -47,8 +47,24 @@ const char* target_directory = NULL;
 static int extract_raw_crash_reports = 0;
 static int keep_crash_reports = 0;
 
-const char **keywords;
-int keywords_len = 0;
+const char **_keywords;
+int _keywords_len = 0;
+
+void *_userinfo;
+export_progress_callback _progress_callback;
+
+
+void notify_progress (const char *format, ...)
+{
+    char buffer[256];
+    va_list args;
+    va_start (args, format);
+    vsprintf (buffer,format, args);
+    va_end (args);
+
+    printf("%s", buffer);
+    _progress_callback(_userinfo, buffer);
+}
 
 static int file_exists(const char* path)
 {
@@ -100,7 +116,7 @@ static int extract_raw_crash_report(const char* filename) {
 
 static int afc_client_copy_and_remove_crash_reports(afc_client_t afc, const char* device_directory, const char* host_directory)
 {
-    printf("dir %s\n", device_directory);
+    notify_progress("dir %s\n", device_directory);
 
 	afc_error_t afc_error;
 	int k;
@@ -136,8 +152,8 @@ static int afc_client_copy_and_remove_crash_reports(afc_client_t afc, const char
 
 	/* loop over file entries */
 	for (k = 0; list[k]; k++) {
-        printf("%s \n", list[k]);
-        
+        notify_progress("%s \n", list[k]);
+
 		if (!strcmp(list[k], ".") || !strcmp(list[k], "..")) {
 			continue;
 		}
@@ -163,7 +179,7 @@ static int afc_client_copy_and_remove_crash_reports(afc_client_t afc, const char
 		/* get file information */
 		afc_get_file_info(afc, source_filename, &fileinfo);
 		if (!fileinfo) {
-			printf("Failed to read information for '%s'. Skipping...\n", source_filename);
+            notify_progress("Failed to read information for '%s'. Skipping...\n", source_filename);
 			continue;
 		}
 
@@ -194,7 +210,7 @@ static int afc_client_copy_and_remove_crash_reports(afc_client_t afc, const char
 				stbuf.st_mtime = (time_t)(atoll(fileinfo[i+1]) / 1000000000);
 			} else if (!strcmp(fileinfo[i], "LinkTarget")) {
 				/* report latest crash report filename */
-				printf("Link: %s\n", (char*)target_filename + strlen(target_directory));
+                notify_progress("Link: %s\n", (char*)target_filename + strlen(target_directory));
 
 				/* remove any previous symlink */
 				if (file_exists(target_filename)) {
@@ -235,24 +251,24 @@ static int afc_client_copy_and_remove_crash_reports(afc_client_t afc, const char
                 if (!keep_crash_reports)
                     afc_remove_path(afc, source_filename);
             } else {
-                printf("skip dir: %s", source_filename);
+                notify_progress("skip dir: %s", source_filename);
             }
 		} else if (S_ISREG(stbuf.st_mode)) {
             
             if (!strstr(list[k], ".ips")) {
-                printf("skip, not .ips\n");
+                notify_progress("skip, not .ips\n");
                 continue;
             }
 
             int skip = 1;
-            for (int i = 0; i < keywords_len; i++) {
-                if (strstr(list[k], keywords[i])) {
+            for (int i = 0; i < _keywords_len; i++) {
+                if (strstr(list[k], _keywords[i])) {
                     skip = 0;
                     break;
                 }
             }
             if (skip) {
-                printf("skip, no keyword\n");
+                notify_progress("skip, no keyword\n");
                 continue;
             }
 
@@ -317,14 +333,17 @@ static int afc_client_copy_and_remove_crash_reports(afc_client_t afc, const char
 	return res;
 }
 
-
-int copy_crash_reports(char *target_directory, const char **k, int k_len)
+int copy_crash_reports(char *target_directory, const char **keywords, int keywords_len,
+                       export_progress_callback progress_callback, void *object)
 {
-    keywords = k;
-    keywords_len = k_len;
+    _keywords = keywords;
+    _keywords_len = keywords_len;
+    _userinfo = object;
+    _progress_callback = progress_callback;
+
 
     for (int i = 0; i < keywords_len; i++) {
-        printf("keywords: %s\n", keywords[i]);
+        notify_progress("keywords: %s\n", _keywords[i]);
     }
 
     idevice_t device = NULL;
@@ -343,9 +362,9 @@ int copy_crash_reports(char *target_directory, const char **k, int k_len)
     device_error = idevice_new(&device, udid);
     if (device_error != IDEVICE_E_SUCCESS) {
         if (udid) {
-            printf("No device found with udid %s, is it plugged in?\n", udid);
+            notify_progress("No device found with udid %s, is it plugged in?\n", udid);
         } else {
-            printf("No device found, is it plugged in?\n");
+            notify_progress("No device found, is it plugged in?\n");
         }
         return -1;
     }
@@ -435,7 +454,7 @@ int copy_crash_reports(char *target_directory, const char **k, int k_len)
         return -1;
     }
 
-    printf("Done.\n");
+    notify_progress("Done.\n");
 
     afc_client_free(afc);
     idevice_free(device);

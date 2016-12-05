@@ -33,6 +33,7 @@ public slots:
     void onCellClicked(int row, int column);
     void onDeviceEvent(int type, char *udid);
     void onExportFinish(QString result, QString error);
+    void onExportProgress(QString message);
 
 private:
     Ui::Widget *ui;

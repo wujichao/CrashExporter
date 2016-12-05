@@ -5,13 +5,14 @@
 #ifndef IDEVICECRASHREPORT_H
 #define IDEVICECRASHREPORT_H
 
-typedef void(*crash_file_name_cb)(void *object, char *name);
+typedef void(*export_progress_callback)(void *object, char *message);
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int copy_crash_reports(char *target_directory, const char **keyworks, int keywords_len);
+int copy_crash_reports(char *target_directory, const char **keywords, int keywords_len,
+                       export_progress_callback progress_callback, void *object);
 
 #ifdef __cplusplus
 }

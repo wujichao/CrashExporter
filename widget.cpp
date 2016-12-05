@@ -10,6 +10,7 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QTimer>
+#include <QScrollBar>
 #include "devicemonitor.h"
 #include "exporttask.h"
 
@@ -241,6 +242,7 @@ void Widget::startExportTask(QString udid, QStringList keywords)
         ExportTask *task = new ExportTask(udid, keywords, this);
 
         connect(task, &ExportTask::exportFinish, this, &Widget::onExportFinish);
+        connect(task, &ExportTask::exportProgress, this, &Widget::onExportProgress);
         connect(task, &ExportTask::finished, task, &QObject::deleteLater);
         task->start();
     }
@@ -272,6 +274,14 @@ void Widget::onExportFinish(QString result, QString error)
     crashFiles = files;
     clearContents();
     updateTableWidgets();
+}
+
+void Widget::onExportProgress(QString message)
+{
+    ui->consoleView->insertPlainText(message);
+
+    QScrollBar *sb = ui->consoleView->verticalScrollBar();
+    sb->setValue(sb->maximum());
 }
 
 void Widget::updateTableWidgets()
