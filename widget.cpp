@@ -199,7 +199,9 @@ void Widget::onDeviceEvent(int type, char *udid)
     str.sprintf("device_name: %s udid: %s\n", name, udid);
     updateIndicatorLabel(str);
     console_log(str);
+#ifndef WIN32
     free(name);
+#endif
 
     // 检查当前有多少个设备连接, 一个设备也可能既通过wifi又通过usb连接
     // 暂不能判断是否是usb或者是wifi

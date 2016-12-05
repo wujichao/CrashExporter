@@ -261,7 +261,8 @@ static int afc_client_copy_and_remove_crash_reports(afc_client_t afc, const char
             }
 
             int skip = 1;
-            for (int i = 0; i < _keywords_len; i++) {
+            int i = 0;
+            for (i = 0; i < _keywords_len; i++) {
                 if (strstr(list[k], _keywords[i])) {
                     skip = 0;
                     break;
@@ -341,8 +342,8 @@ int copy_crash_reports(char *target_directory, const char **keywords, int keywor
     _userinfo = object;
     _progress_callback = progress_callback;
 
-
-    for (int i = 0; i < keywords_len; i++) {
+    int i = 0;
+    for (i = 0; i < keywords_len; i++) {
         notify_progress("keywords: %s\n", _keywords[i]);
     }
 
