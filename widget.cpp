@@ -10,7 +10,8 @@
 #include <QDir>
 #include <QFile>
 #include <QTimer>
-#include <devicemonitor.h>
+#include "devicemonitor.h"
+#include "exporttask.h"
 
 void get_crash_list(void *object, char *name)
 {
@@ -243,18 +244,63 @@ void Widget::onDeviceEvent(int type, char *udid)
         fprintf(stderr, "ERROR: Unable to retrieve device list!\n");
         return;
     }
-    idevice_device_list_free(dev_list);
 
     printf("count %d\n", count);
-    if (count != 1) {
-        fprintf(stderr, "ERROR: device_list_count(%d) != 1!\n", count);
-        QMessageBox::information(this, QObject::tr("错误"), QObject::tr("请关掉手机上的wifi, 并且电脑只连接一台手机"));
-        return;//同时连接零个或多个设备
+    for (int i = 0; i < count; i++) {
+        char *id = dev_list[i];
+        printf("udid: %s\n", id);
+
+        QString qudid; qudid.sprintf("%s", id);
+        QStringList keywords;
+        keywords.append("MGJ");
+        keywords.append("Mogujie");
+
+        startExportTask(qudid, keywords);
     }
 
-    // TODO export task
-    const char *keywords[] = {"MGJ", "Mogujie"};
-    copy_crash_reports("/Users/wujichao/Downloads/firefox/crash-get/crash5", keywords, 2);
+    idevice_device_list_free(dev_list);
+
+//    if (count != 1) {
+//        fprintf(stderr, "ERROR: device_list_count(%d) != 1!\n", count);
+//        QMessageBox::information(this, QObject::tr("错误"), QObject::tr("请关掉手机上的wifi, 并且电脑只连接一台手机"));
+//        return;//同时连接零个或多个设备
+//    }
 
     if (udid) free(udid);
+}
+
+void Widget::startExportTask(QString udid, QStringList keywords)
+{
+    qDebug() << "startExportTask " << udid;
+    bool is_in = taskSet.find(udid) != taskSet.end();
+    if(is_in) {
+        qDebug() << "is_in: " << udid;
+        return;
+    }
+    taskSet.insert(udid);
+
+    // TODO:
+    if (udid == "ad8b22b0bfb77f66ea488e0cd55b5bcbec70c850") {
+        qDebug() << "export udid:" << udid;
+
+        ExportTask *task = new ExportTask(udid, keywords, this);
+
+        connect(task, &ExportTask::exportFinish, this, &Widget::onExportFinish);
+        connect(task, &ExportTask::finished, task, &QObject::deleteLater);
+        task->start();
+    }
+}
+
+void Widget::restartExportTask(QString udid, QStringList keywords)
+{
+    std::set<QString>::iterator it = taskSet.find(udid);
+    if(it != taskSet.end()) {
+        taskSet.erase(it);
+    }
+    startExportTask(udid, keywords);
+}
+
+void Widget::onExportFinish(QString result, QString error)
+{
+    qDebug() << "exportFinish "<< result << error;
 }

@@ -6,6 +6,7 @@
 #include <libimobiledevice/lockdown.h>
 #include <QModelIndex>
 #include <devicemonitor.h>
+#include <set>
 
 struct CrashItem {
     QString path;
@@ -36,11 +37,16 @@ public slots:
     void onClickExportSelectButton();
     void onCellClicked(int row, int column);
     void onDeviceEvent(int type, char *udid);
+    void onExportFinish(QString result, QString error);
 
 private:
     Ui::Widget *ui;
     DeviceMonitor *monitor;
     void setupTableWidget();
+    std::set<QString> taskSet;
+
+    void startExportTask(QString udid, QStringList keywords);
+    void restartExportTask(QString udid, QStringList keywords);
 };
 
 #endif // WIDGET_H

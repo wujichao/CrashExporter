@@ -323,6 +323,10 @@ int copy_crash_reports(char *target_directory, const char **k, int k_len)
     keywords = k;
     keywords_len = k_len;
 
+    for (int i = 0; i < keywords_len; i++) {
+        printf("keywords: %s\n", keywords[i]);
+    }
+
     idevice_t device = NULL;
     lockdownd_client_t lockdownd = NULL;
     afc_client_t afc = NULL;
@@ -403,6 +407,7 @@ int copy_crash_reports(char *target_directory, const char **k, int k_len)
 
     lockdownd_error = lockdownd_start_service(lockdownd, "com.apple.crashreportcopymobile", &service);
     if (lockdownd_error != LOCKDOWN_E_SUCCESS) {
+        // 一般到这里的是wifi连接 导致导不出来
         lockdownd_client_free(lockdownd);
         idevice_free(device);
         return -1;

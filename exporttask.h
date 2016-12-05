@@ -8,17 +8,18 @@ class ExportTask : public QThread
     Q_OBJECT
 
 public:
-    ExportTask(QObject *parent = 0, QString path = "");
+    ExportTask(QString udid, QStringList keywords, QObject *parent = 0);
     ~ExportTask();
 
 signals:
-    void uploadFinish(QString result, QString error);
+    void exportFinish(QString result, QString error);
 
 protected:
     void run() Q_DECL_OVERRIDE;
 
 private:
-    QString path;
+    QString udid;
+    QStringList keywords;
 };
 
 #endif // EXPORT_TASK_H
