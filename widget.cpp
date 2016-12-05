@@ -93,6 +93,9 @@ void Widget::saveCrashFiles(std::vector<QFileInfo> &files)
                                                     QDir::homePath(),
                                                     QFileDialog::ShowDirsOnly
                                                     | QFileDialog::DontResolveSymlinks);
+    if (dir == NULL) {
+        return;
+    }
     QDir d(dir);
 
     for ( auto i = files.begin(); i != files.end(); i++ ) {
