@@ -7,6 +7,7 @@
 #include <QModelIndex>
 #include <devicemonitor.h>
 #include <set>
+#include <QFileInfo>
 
 struct CrashItem {
     QString path;
@@ -41,12 +42,19 @@ public slots:
 
 private:
     Ui::Widget *ui;
-    DeviceMonitor *monitor;
     void setupTableWidget();
-    std::set<QString> taskSet;
+    void updateTableWidgets();
 
+    // monitor
+    DeviceMonitor *monitor;
+
+    // export
+    std::set<QString> taskSet;
     void startExportTask(QString udid, QStringList keywords);
     void restartExportTask(QString udid, QStringList keywords);
+
+    // list
+    QFileInfoList crashFiles;
 };
 
 #endif // WIDGET_H

@@ -13,72 +13,6 @@
 #include "devicemonitor.h"
 #include "exporttask.h"
 
-void get_crash_list(void *object, char *name)
-{
-    printf("insert row: name %s\n", name);
-    if (!strstr(name, "MGJ") && !strstr(name, "Mogujie")) {
-        printf("skip\n");
-        return;
-    }
-    if (!strstr(name, ".ips")) {
-        printf("skip\n");
-        return;
-    }
-
-    int pos_name_start = -1;
-    int pos_name_end = -1;
-    int pos_date_start = -1;
-    int pos_date_end = -1;
-    for (int i = strlen(name)-1; i >= 0; i--) {
-        char c = name[i];
-        if (c == '.' && i != 0) {
-            pos_date_end = i;
-        }
-        if (c == '-') {
-            pos_name_end = i;
-            pos_date_start = i+1;
-        }
-        if (c == '/' && pos_name_start == -1) {
-            pos_name_start = i+1;
-        }
-    }
-
-    if (pos_name_start && pos_name_end && pos_date_start && pos_date_end) {
-        char *bundle = (char*)malloc(pos_name_end-pos_name_start+1);
-        strncpy(bundle, name+pos_name_start, pos_name_end-pos_name_start);
-        bundle[pos_name_end-pos_name_start] = 0;
-
-        char date[50] = {0};
-        int offset = pos_date_start;
-        if (pos_date_end-pos_date_start == 17) {
-            int i = 0;
-            for (i = 0; i < pos_date_end-pos_date_start + 2; i++) {
-                if (i == 13 || i == 16) {
-                    date[i] = ':';
-                } else {
-                    date[i] = name[offset];
-                    offset += 1;
-                }
-            }
-        } else {
-            strncpy(date, name+pos_date_start, pos_date_end-pos_date_start);
-        }
-
-        printf("%s %s\n", bundle, date);
-
-        Widget *widget = static_cast<Widget*>(object);
-        widget->insertRow(QString(bundle), QString(date));
-
-        CrashItem item;
-        item.path = QString(name);
-        item.bundle = QString(bundle);
-        item.date = QString(date);
-        widget->crashItems.push_back(item);
-
-        free(bundle);
-    }
-}
-
 Widget::Widget(QWidget *parent) :
         QWidget(parent),
         ui(new Ui::Widget)
@@ -102,28 +36,15 @@ Widget::Widget(QWidget *parent) :
 
 void Widget::onCellClicked(int row, int column)
 {
-//    printf("%d %d\n", row, column);
-//    qDebug()<< crashItems[row].path;
-//    QString path = crashItems[row].path;
-//    QString filename = path.split('/').last();
+    printf("onCellClicked row: %d, column %d\n", row, column);
 
-//    char source_filename[500] = {0};
-//    strcpy(source_filename, path.toLatin1().data());
-
-//    QString finalPath = QDir::temp().filePath(filename);
-//    char target_filename[500] = {0};
-//    strcpy(target_filename, finalPath.toLatin1().data());
-
-//    int result = get_crash_report_detail(source_filename, target_filename);
-//    if (result == 0) {
-//        QFile f(target_filename);
-//        if (!f.open(QFile::ReadOnly | QFile::Text)) {
-//            qDebug() << "open file error" << QString(target_filename);
-//        }
-//        QTextStream in(&f);
-//        ui->detailView->setText(in.readAll());
-//        qDebug() << f.size();
-//    }
+    QFileInfo fileInfo = crashFiles[row];
+    QFile f(fileInfo.filePath());
+    if (!f.open(QFile::ReadOnly | QFile::Text)) {
+        qDebug() << "open file error" << QString(fileInfo.filePath());
+    }
+    QTextStream in(&f);
+    ui->detailView->setText(in.readAll());
 }
 
 Widget::~Widget()
@@ -200,8 +121,6 @@ void Widget::onDeviceEvent(int type, char *udid)
     printf("idevice_event_cb: event: %s, udid: %s\n",
            type==IDEVICE_DEVICE_ADD ? "connect" : "disconnect",
            udid);
-
-    clearContents();
 
     // connect device
     //
@@ -303,4 +222,43 @@ void Widget::restartExportTask(QString udid, QStringList keywords)
 void Widget::onExportFinish(QString result, QString error)
 {
     qDebug() << "exportFinish "<< result << error;
+
+    QDir dir(result);
+    QFileInfoList files = dir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllEntries);
+    foreach (QFileInfo file, files){
+        if (file.isDir()){
+            qDebug() << "DIR: " << file.fileName();
+        }else{
+            qDebug() << "FILE: " << file.fileName();
+        }
+    }
+
+    crashFiles = files;
+    updateTableWidgets();
+}
+
+void Widget::updateTableWidgets()
+{
+    clearContents();
+
+    foreach (QFileInfo file, crashFiles){
+        if (file.isDir()) {
+            qDebug() << "DIR: " << file.fileName();
+            continue;
+        }
+
+        QString filename = file.fileName();
+        QRegExp rx("^([^-]+)-(\\d{4}-\\d{2}-\\d{2})-(\\d{2})(\\d{2})(\\d{2})");
+        int pos = rx.indexIn(filename);
+        //qDebug() <<pos;
+        QStringList list = rx.capturedTexts();
+        //qDebug() <<list;
+
+        if (pos != -1) {
+            QString bundle = list[1];
+            QString date = QString("%1 %2:%3:%4").arg(list[2], list[3], list[4], list[5]);
+            //qDebug() << bundle << date;
+            insertRow(bundle, date);
+        }
+    }
 }

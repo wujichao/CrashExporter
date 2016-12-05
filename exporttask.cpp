@@ -35,6 +35,7 @@ void ExportTask::run()
         c_keywords[i] = strdup(keywords[i].toUtf8().data());
     }
 
+    // TODO: get error message
     copy_crash_reports(path, c_keywords, s);
 
     // TODO:
