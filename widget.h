@@ -53,6 +53,9 @@ private:
 
     // list
     QFileInfoList crashFiles;
+
+    // save
+    void saveCrashFiles(std::vector<QFileInfo> &files);
 };
 
 #endif // WIDGET_H

@@ -8,6 +8,7 @@
 #include <vector>
 #include <QDir>
 #include <QFile>
+#include <QFileDialog>
 #include <QTimer>
 #include "devicemonitor.h"
 #include "exporttask.h"
@@ -56,12 +57,49 @@ void Widget::clearContents()
 
 void Widget::onClickExportAllButton()
 {
-    QMessageBox::information(this, tr("送餐"), tr("叮咚！外卖已送达"));
+    std::vector<QFileInfo> files;
+
+    foreach (QFileInfo file, crashFiles){
+        if (file.isDir()) {
+            qDebug() << "DIR: " << file.fileName();
+            continue;
+        }
+        files.push_back(file);
+    }
+
+    saveCrashFiles(files);
 }
 
 void Widget::onClickExportSelectButton()
 {
-    QMessageBox::information(this, tr("送餐"), tr("叮咚！外卖已送达"));
+    std::vector<QFileInfo> files;
+
+    QModelIndexList selection = ui->tableWidget->selectionModel()->selectedRows();
+    for(int i = 0; i < selection.count(); i++) {
+        QModelIndex index = selection.at(i);
+        qDebug() << index.row();
+
+        QFileInfo file = crashFiles[index.row()];
+        files.push_back(file);
+    }
+
+    saveCrashFiles(files);
+}
+
+void Widget::saveCrashFiles(std::vector<QFileInfo> &files)
+{
+    QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+                                                    QDir::homePath(),
+                                                    QFileDialog::ShowDirsOnly
+                                                    | QFileDialog::DontResolveSymlinks);
+    QDir d(dir);
+
+    for ( auto i = files.begin(); i != files.end(); i++ ) {
+        QFileInfo file = *i;
+        QFile::copy(file.filePath(), d.filePath(file.fileName()));
+    }
+
+    QMessageBox::information(this, "", "导出成功! 日志已导出至: " + dir);
 }
 
 void Widget::setupTableWidget()
