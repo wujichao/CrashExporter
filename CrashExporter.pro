@@ -8,10 +8,10 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = CrashExportor
+TARGET = CrashExporter
 TEMPLATE = app
 
-QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.3
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
 
 ICON = MyIcon.icns
 RC_ICONS = MyIcon.ico

@@ -39,7 +39,7 @@ Widget::Widget(QWidget *parent) :
 
     loadKeywords();
     connect(ui->refreshButton, &QPushButton::clicked, this, &Widget::onClickRefreshButton);
-    QTimer::singleShot(300, this, &Widget::showTips);
+//    QTimer::singleShot(300, this, &Widget::showTips);
 }
 
 Widget::~Widget()
