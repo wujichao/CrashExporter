@@ -354,7 +354,7 @@ int copy_crash_reports(char *target_directory, const char **keywords, int keywor
 
     int i = 0;
     for (i = 0; i < keywords_len; i++) {
-        notify_progress("keywords: %s\n", _keywords[i]);
+        printf("keywords: %s\n", _keywords[i]);
     }
 
     idevice_t device = NULL;
