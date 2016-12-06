@@ -34,6 +34,7 @@ public slots:
     void onDeviceEvent(int type, char *udid);
     void onExportFinish(QString result, QString error, QString udid);
     void onExportProgress(QString message);
+    void showTips();
 
 private:
     Ui::Widget *ui;

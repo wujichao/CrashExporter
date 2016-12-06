@@ -33,12 +33,19 @@ Widget::Widget(QWidget *parent) :
     setupTableWidget();
 
     ui->detailView->append("Crash详情");
+
+    QTimer::singleShot(300, this, &Widget::showTips);
 }
 
 Widget::~Widget()
 {
     delete monitor;
     delete ui;
+}
+
+void Widget::showTips()
+{
+    QMessageBox::information(this, "", "请将手机关闭Wifi后, 使用数据线连接到电脑上, 稍等片刻");
 }
 
 void Widget::updateIndicatorLabel(QString status)
@@ -318,6 +325,11 @@ void Widget::console_log(QString message)
 
 void Widget::updateTableWidgets()
 {
+    if (crashFiles.length() == 0) {
+        QMessageBox::information(this, "", "没有找到关键词相关Crash, 请调整关键词后重试");
+        return;
+    }
+
     foreach (QFileInfo file, crashFiles){
         if (file.isDir()) {
             qDebug() << "DIR: " << file.fileName();
