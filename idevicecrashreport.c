@@ -56,7 +56,7 @@ export_progress_callback _progress_callback;
 
 void notify_progress (const char *format, ...)
 {
-    char buffer[256];
+    char buffer[1024];
     va_list args;
     va_start (args, format);
     vsprintf (buffer,format, args);
