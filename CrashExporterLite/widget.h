@@ -1,0 +1,29 @@
+#ifndef WIDGET_H
+#define WIDGET_H
+
+#include <QWidget>
+
+namespace Ui {
+class Widget;
+}
+
+class Widget : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit Widget(QWidget *parent = 0);
+    ~Widget();
+
+public slots:
+    void onUploadFinish(QString result, QString error);
+
+protected:
+    void timerEvent(QTimerEvent *);
+
+private:
+    Ui::Widget *ui;
+    int time;
+};
+
+#endif // WIDGET_H
