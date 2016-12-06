@@ -11,6 +11,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = CrashExportor
 TEMPLATE = app
 
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.3
+
 ICON = MyIcon.icns
 RC_ICONS = MyIcon.ico
 
