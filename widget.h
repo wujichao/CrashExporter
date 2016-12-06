@@ -8,6 +8,7 @@
 #include <devicemonitor.h>
 #include <set>
 #include <QFileInfo>
+#include <QSettings>
 
 struct CrashItem {
     QString path;
@@ -35,6 +36,7 @@ public slots:
     void onExportFinish(QString result, QString error, QString udid);
     void onExportProgress(QString message);
     void showTips();
+    void onClickRefreshButton();
 
 private:
     Ui::Widget *ui;
@@ -45,9 +47,15 @@ private:
     void clearContents();
     void insertRow(QString title, QString date);
     void console_log(QString message);
+    QStringList loadKeywords();
+    void saveKeywords();
+
+    // settings
+    QSettings *settings;
 
     // monitor
     DeviceMonitor *monitor;
+    void scanDevice();
 
     // export
     std::set<QString> taskSet;

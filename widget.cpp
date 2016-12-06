@@ -22,6 +22,9 @@ Widget::Widget(QWidget *parent) :
 
     ui->setupUi(this);
 
+    settings = new QSettings("com.jichaowu", "CrashExporter", this);
+    qDebug() << settings;
+
     connect(ui->exportAllButton, &QPushButton::clicked, this, &Widget::onClickExportAllButton);
     connect(ui->exportSelectButton, &QPushButton::clicked, this, &Widget::onClickExportSelectButton);
     connect(ui->tableWidget, &QTableWidget::cellClicked, this, &Widget::onCellClicked);
@@ -34,6 +37,8 @@ Widget::Widget(QWidget *parent) :
 
     ui->detailView->append("Crash详情");
 
+    loadKeywords();
+    connect(ui->refreshButton, &QPushButton::clicked, this, &Widget::onClickRefreshButton);
     QTimer::singleShot(300, this, &Widget::showTips);
 }
 
@@ -56,6 +61,7 @@ void Widget::updateIndicatorLabel(QString status)
 void Widget::clearContents()
 {
     ui->tableWidget->clear();
+    ui->tableWidget->setRowCount(0);
     ui->detailView->clear();
 
     QStringList listHeaders;
@@ -175,6 +181,13 @@ void Widget::onDeviceEvent(int type, char *udid)
            udid);
     console_log(message);
 
+    scanDevice();
+
+    if (udid) free(udid);
+}
+
+void Widget::scanDevice()
+{
     // connect device
     //
     idevice_t device = NULL;
@@ -199,11 +212,11 @@ void Widget::onDeviceEvent(int type, char *udid)
         return;
     }
 
-    // update ui
+    // update device name
     //
     printf("device name: %s\n", name);
     QString str;
-    str.sprintf("device_name: %s udid: %s\n", name, udid);
+    str.sprintf("已连接: %s\n", name);
     updateIndicatorLabel(str);
     console_log(str);
 #ifndef WIN32
@@ -222,6 +235,8 @@ void Widget::onDeviceEvent(int type, char *udid)
 
     printf("count %d\n", count);
     console_log("设备列表: \n");
+    QStringList keywords = loadKeywords();
+
     for (int i = 0; i < count; i++) {
         char *id = dev_list[i];
         printf("udid: %s\n", id);
@@ -230,10 +245,6 @@ void Widget::onDeviceEvent(int type, char *udid)
         console_log(log);
 
         QString qudid; qudid.sprintf("%s", id);
-        QStringList keywords;
-        keywords.append("MGJ");
-        keywords.append("Mogujie");
-
         startExportTask(qudid, keywords);
     }
 
@@ -244,8 +255,6 @@ void Widget::onDeviceEvent(int type, char *udid)
 //        QMessageBox::information(this, QObject::tr("错误"), QObject::tr("请关掉手机上的wifi, 并且电脑只连接一台手机"));
 //        return;//同时连接零个或多个设备
 //    }
-
-    if (udid) free(udid);
 }
 
 void Widget::startExportTask(QString udid, QStringList keywords)
@@ -304,7 +313,7 @@ void Widget::onExportFinish(QString result, QString error, QString udid)
         }
         console_log(file.fileName() + "\n");
     }
-
+    console_log("导出成功!\n");
     crashFiles = files;
     clearContents();
     updateTableWidgets();
@@ -350,4 +359,30 @@ void Widget::updateTableWidgets()
             insertRow(bundle, date);
         }
     }
+}
+
+void Widget::onClickRefreshButton()
+{
+    taskSet.clear();
+    saveKeywords();
+    scanDevice();
+}
+
+QStringList Widget::loadKeywords()
+{
+    QString keywords = settings->value("keywords", "MGJ,Mogujie").toString();
+    ui->keywordsField->setText(keywords);
+    if (keywords.length() == 0) {
+        QStringList list;
+        return list;
+    } else {
+        QStringList list = keywords.split(",");
+        return list;
+    }
+}
+
+void Widget::saveKeywords()
+{
+    QString keywords = ui->keywordsField->text();
+    settings->setValue("keywords", keywords);
 }

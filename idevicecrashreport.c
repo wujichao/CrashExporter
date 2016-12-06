@@ -259,7 +259,6 @@ static int afc_client_copy_and_remove_crash_reports(afc_client_t afc, const char
                 notify_progress("skip, not .ips\n");
                 continue;
             }
-
             int skip = 1;
             int i = 0;
             for (i = 0; i < _keywords_len; i++) {
@@ -268,10 +267,21 @@ static int afc_client_copy_and_remove_crash_reports(afc_client_t afc, const char
                     break;
                 }
             }
+
+            // blacklist
+            if (_keywords_len == 0) {
+                if (strstr(list[k], "backupd") || strstr(list[k], "JetsamEvent") || strstr(list[k], "CoreTime")) {
+                    skip = 1;
+                } else {
+                    skip = 0;
+                }
+            }
+
             if (skip) {
                 notify_progress("skip, no keyword\n");
                 continue;
             }
+
 
 			/* copy file to host */
 			afc_error = afc_file_open(afc, source_filename, AFC_FOPEN_RDONLY, &handle);
