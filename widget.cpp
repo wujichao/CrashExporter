@@ -346,7 +346,7 @@ void Widget::updateTableWidgets()
         }
 
         QString filename = file.fileName();
-        QRegExp rx("^([^-]+)-(\\d{4}-\\d{2}-\\d{2})-(\\d{2})(\\d{2})(\\d{2})");
+        QRegExp rx("^([^-]+).(\\d{4}-\\d{2}-\\d{2})-(\\d{2})(\\d{2})(\\d{2})");
         int pos = rx.indexIn(filename);
         //qDebug() <<pos;
         QStringList list = rx.capturedTexts();
