@@ -6,7 +6,7 @@
 #include "uploadtask.h"
 #include "../exporttask.h"
 #include <QMessageBox>
-
+#include <QDir>
 #include <QThread>
 
 Widget::Widget(QWidget *parent) :
@@ -144,26 +144,22 @@ void Widget::onExportFinish(QString result, QString error, QString udid)
 
     updateIndicatorLabel("导出成功: " + result + "\n");
 
+    QDir dir(result);
+    QFileInfoList files = dir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllEntries);
+    foreach (QFileInfo file, files){
+        if (file.isDir()){
+            qDebug() << "DIR: " << file.fileName();
+        }else{
+            qDebug() << "FILE: " << file.fileName();
+        }
+    }
+    crashFiles = files;
 
-//    QDir dir(result);
-//    QFileInfoList files = dir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllEntries);
-//    foreach (QFileInfo file, files){
-//        if (file.isDir()){
-//            qDebug() << "DIR: " << file.fileName();
-//        }else{
-//            qDebug() << "FILE: " << file.fileName();
-//        }
-//        console_log(file.fileName() + "\n");
-//    }
-//    console_log("导出成功!\n");
-//    crashFiles = files;
-//    clearContents();
-//    updateTableWidgets();
-
-//    UploadTask *task = new UploadTask(this, "/Users/wujichao/Downloads/firefox/qt/《Qt Creator快速入门》代码/版权声明.txt");
-//    connect(task, &UploadTask::uploadFinish, this, &Widget::onUploadFinish);
-//    connect(task, &UploadTask::finished, task, &QObject::deleteLater);
-//    task->start();
+    updateIndicatorLabel("上传...\n");
+    UploadTask *task = new UploadTask(this, result);
+    connect(task, &UploadTask::uploadFinish, this, &Widget::onUploadFinish);
+    connect(task, &UploadTask::finished, task, &QObject::deleteLater);
+    task->start();
 }
 
 void Widget::onExportProgress(QString message)

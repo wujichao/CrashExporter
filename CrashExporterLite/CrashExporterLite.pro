@@ -27,6 +27,10 @@ win32:INCLUDEPATH += "C:\Users\Jiangfan\Desktop\libimobiledevice-msvc-master\lib
 win32:INCLUDEPATH += "C:\Users\Jiangfan\Desktop\vc\libplist-msvc-master\include"
 win32:LIBS += "C:\Users\Jiangfan\Desktop\demo1\lib\imobiledevice.lib"
 
+# zip
+unix:INCLUDEPATH += "/usr/local/Cellar/libzip/1.1.2/include"
+unix:LIBS += "/usr/local/Cellar/libzip/1.1.2/lib/libzip.dylib"
+
 TARGET = CrashExporterLite
 TEMPLATE = app
 
@@ -53,7 +57,8 @@ SOURCES += main.cpp\
     ../utils.c \
     ../idevice_id.c \
     ../devicemonitor.cpp \
-    ../exporttask.cpp
+    ../exporttask.cpp \
+    libzippp.cpp
 
 HEADERS  += widget.h \
     qiniu/b64/b64.h \
@@ -72,7 +77,8 @@ HEADERS  += widget.h \
     ../idevicecrashreport.h \
     ../idevice_id.h \
     ../devicemonitor.h \
-    ../exporttask.h
+    ../exporttask.h \
+    libzippp.h
 
 FORMS    += widget.ui
 
