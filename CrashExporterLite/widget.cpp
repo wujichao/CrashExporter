@@ -39,6 +39,15 @@ void Widget::onDeviceEvent(int type, char *udid)
            type==IDEVICE_DEVICE_ADD ? "connect" : "disconnect",
            udid);
 
+    // 拔掉的设备重新连接时重试
+    if (type == IDEVICE_DEVICE_REMOVE) {
+        QString qudid; qudid.sprintf("%s", udid);
+        std::set<QString>::iterator it = taskSet.find(qudid);
+        if(it != taskSet.end()) {
+            taskSet.erase(it);
+        }
+    }
+
     scanDevice();
 
     if (udid) free(udid);
